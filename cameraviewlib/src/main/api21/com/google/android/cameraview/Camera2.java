@@ -757,4 +757,8 @@ class Camera2 extends CameraViewImpl {
 
     }
 
+    @Override
+    public Size getPreviewSize() {
+        return null;
+    }
 }

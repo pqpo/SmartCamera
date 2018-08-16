@@ -1,0 +1,67 @@
+# For more information about using CMake with Android Studio, read the
+# documentation: https://d.android.com/studio/projects/add-native-code.html
+
+# Sets the minimum version of CMake required to build the native library.
+
+cmake_minimum_required(VERSION 3.4.1)
+
+need_tdd = EXISTS ${PROJECT_SOURCE_DIR}/opencv/lib/${ANDROID_ABI}/libtbb.a
+
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../jniLibs/${ANDROID_ABI})
+include_directories(opencv/include
+                    src/main/cpp/include)
+
+add_library(opencv_imgproc STATIC IMPORTED)
+add_library(opencv_core STATIC IMPORTED)
+if(need_tdd)
+add_library(tbb STATIC IMPORTED)
+endif()
+
+set_target_properties(opencv_imgproc PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/opencv/lib/${ANDROID_ABI}/libopencv_imgproc.a)
+set_target_properties(opencv_core PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/opencv/lib/${ANDROID_ABI}/libopencv_core.a)
+if(need_tdd)
+set_target_properties(tbb PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/opencv/lib/${ANDROID_ABI}/libtbb.a)
+endif()
+
+
+# Creates and names a library, sets it as either STATIC
+# or SHARED, and provides the relative paths to its source code.
+# You can define multiple libraries, and CMake builds them for you.
+# Gradle automatically packages shared libraries with your APK.
+
+aux_source_directory(src/main/cpp/ DIR_LIB_SOURCE)
+add_library (smart_camera SHARED ${DIR_LIB_SOURCE})
+
+# Searches for a specified prebuilt library and stores the path as a
+# variable. Because CMake includes system libraries in the search path by
+# default, you only need to specify the name of the public NDK library
+# you want to add. CMake verifies that the library exists before
+# completing its build.
+
+find_library( # Sets the name of the path variable.
+              log-lib
+
+              # Specifies the name of the NDK library that
+              # you want CMake to locate.
+              log)
+
+find_library(jnigraphics-lib
+             jnigraphics)
+
+
+# Specifies libraries CMake should link to your target library. You
+# can link multiple libraries, such as libraries you define in this
+# build script, prebuilt third-party libraries, or system libraries.
+
+target_link_libraries( # Specifies the target library.
+                         smart_camera
+                         opencv_imgproc
+                         opencv_core
+                         if(need_tdd)
+                         tbb
+                         endif()
+
+                         # Links the target library to the log library
+                         # included in the NDK.
+                         ${log-lib}
+                         ${jnigraphics-lib})

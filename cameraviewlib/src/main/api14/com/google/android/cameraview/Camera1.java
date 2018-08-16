@@ -106,7 +106,7 @@ class Camera1 extends CameraViewImpl {
         mCamera.startPreview();
     }
 
-
+    @Override
     public Size getPreviewSize() {
         if (mCameraParameters == null) {
             return null;
@@ -118,7 +118,12 @@ class Camera1 extends CameraViewImpl {
         return null;
     }
 
+    @Override
+    public int getPreviewRotation() {
+        return calcCameraRotation(mDisplayOrientation);
+    }
 
+    @Override
     boolean start() {
         chooseCamera();
         openCamera();
@@ -130,7 +135,7 @@ class Camera1 extends CameraViewImpl {
         return true;
     }
 
-
+    @Override
     void stop() {
         if (mCamera != null) {
             mCamera.stopPreview();
@@ -160,12 +165,12 @@ class Camera1 extends CameraViewImpl {
         }
     }
 
-
+    @Override
     boolean isCameraOpened() {
         return mCamera != null;
     }
 
-
+    @Override
     void setFacing(int facing) {
         if (mFacing == facing) {
             return;
@@ -177,12 +182,12 @@ class Camera1 extends CameraViewImpl {
         }
     }
 
-
+    @Override
     int getFacing() {
         return mFacing;
     }
 
-
+    @Override
     Set<AspectRatio> getSupportedAspectRatios() {
         SizeMap idealAspectRatios = mPreviewSizes;
         for (AspectRatio aspectRatio : idealAspectRatios.ratios()) {
@@ -193,7 +198,7 @@ class Camera1 extends CameraViewImpl {
         return idealAspectRatios.ratios();
     }
 
-
+    @Override
     boolean setAspectRatio(AspectRatio ratio) {
         if (mAspectRatio == null || !isCameraOpened()) {
             // Handle this later when camera is opened
@@ -212,12 +217,12 @@ class Camera1 extends CameraViewImpl {
         return false;
     }
 
-
+    @Override
     AspectRatio getAspectRatio() {
         return mAspectRatio;
     }
 
-
+    @Override
     void setAutoFocus(boolean autoFocus) {
         if (mAutoFocus == autoFocus) {
             return;
@@ -227,7 +232,7 @@ class Camera1 extends CameraViewImpl {
         }
     }
 
-
+    @Override
     boolean getAutoFocus() {
         if (!isCameraOpened()) {
             return mAutoFocus;
@@ -236,7 +241,7 @@ class Camera1 extends CameraViewImpl {
         return focusMode != null && focusMode.contains("continuous");
     }
 
-
+    @Override
     void setFlash(int flash) {
         if (flash == mFlash) {
             return;
@@ -246,12 +251,12 @@ class Camera1 extends CameraViewImpl {
         }
     }
 
-
+    @Override
     int getFlash() {
         return mFlash;
     }
 
-
+    @Override
     void takePicture() {
         if (!isCameraOpened()) {
             throw new IllegalStateException(
@@ -284,7 +289,7 @@ class Camera1 extends CameraViewImpl {
         }
     }
 
-
+    @Override
     void setDisplayOrientation(int displayOrientation) {
         if (mDisplayOrientation == displayOrientation) {
             return;

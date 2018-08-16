@@ -44,6 +44,10 @@ public class CameraView extends FrameLayout {
     /** The camera device faces the same direction as the device's screen. */
     public static final int FACING_FRONT = Constants.FACING_FRONT;
 
+    public int getPreviewRotation() {
+        return mImpl.getPreviewRotation();
+    }
+
     /** Direction the camera faces relative to device screen. */
     @IntDef({FACING_BACK, FACING_FRONT})
     @Retention(RetentionPolicy.SOURCE)

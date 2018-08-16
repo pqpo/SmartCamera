@@ -49,6 +49,10 @@ public class MaskView extends View {
         initMaskView();
     }
 
+    public RectF getMaskRect() {
+        return maskRect;
+    }
+
     private void initMaskView() {
         porterDuffXfermode = new PorterDuffXfermode(PorterDuff.Mode.CLEAR);
         mMaskPaint = new Paint();

@@ -761,4 +761,9 @@ class Camera2 extends CameraViewImpl {
     public Size getPreviewSize() {
         return null;
     }
+
+    @Override
+    public int getPreviewRotation() {
+        return 0;
+    }
 }

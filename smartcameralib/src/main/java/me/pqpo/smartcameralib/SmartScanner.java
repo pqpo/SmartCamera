@@ -7,7 +7,7 @@ import android.graphics.Bitmap;
  */
 public class SmartScanner {
 
-    public static native void cropRect(byte[] yuvData, int width, int height, float left, float top, float right, float bottom, Bitmap result);
+    public static native void cropRect(byte[] yuvData, int width, int height, int rotation, int x, int y, int maskWidth, int maskHeight, Bitmap result);
 
     static {
         System.loadLibrary("smart_camera");

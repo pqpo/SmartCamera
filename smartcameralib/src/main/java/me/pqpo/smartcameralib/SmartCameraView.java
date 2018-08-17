@@ -3,6 +3,7 @@ package me.pqpo.smartcameralib;
 import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -12,13 +13,18 @@ import android.widget.FrameLayout;
 import com.google.android.cameraview.CameraView;
 import com.google.android.cameraview.Size;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 /**
  * Created by pqpo on 2018/8/15.
  */
 public class SmartCameraView extends CameraView {
 
-    MaskView maskView;
-    private boolean scanPreview = true;
+    protected MaskView maskView;
+    protected boolean scanPreview = true;
+    private Thread previewThread;
+    private ConcurrentLinkedQueue<byte[]> previewDataQueue;
+    private Handler uiHandler;
 
     public SmartCameraView(@NonNull Context context) {
         this(context, null);
@@ -30,6 +36,37 @@ public class SmartCameraView extends CameraView {
 
     public SmartCameraView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        uiHandler = new Handler();
+        previewDataQueue = new ConcurrentLinkedQueue<>();
+        previewThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (!previewThread.isInterrupted()) {
+                    byte[] data = previewDataQueue.poll();
+                    if (data != null) {
+                        int previewRotation = getPreviewRotation();
+                        Size size = getPreviewSize();
+                        Rect revisedMaskRect = getAdjustPreviewMaskRect();
+                        if (revisedMaskRect != null && size != null) {
+                            int result = SmartScanner.previewScan(data, size.getWidth(), size.getHeight(), previewRotation,
+                                    revisedMaskRect.left, revisedMaskRect.top, revisedMaskRect.width(), revisedMaskRect.height(),
+                                    null, 0.3f, 0.7f);
+                            if (result == 1) {
+                                uiHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        takePicture();
+                                        stopScan();
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        previewThread.start();
+
         addMaskView();
         addCallback(new Callback() {
             @Override
@@ -38,20 +75,17 @@ public class SmartCameraView extends CameraView {
                 if (data == null || !scanPreview) {
                     return;
                 }
-                int previewRotation = cameraView.getPreviewRotation();
-                Size size = cameraView.getPreviewSize();
-                Rect revisedMaskRect = getAdjustPreviewMaskRect();
-                if (revisedMaskRect != null && size != null) {
-                    int result = SmartScanner.previewScan(data, size.getWidth(), size.getHeight(), previewRotation,
-                            revisedMaskRect.left, revisedMaskRect.top, revisedMaskRect.width(), revisedMaskRect.height(),
-                            null, 0.3f, 0.7f);
-                    if (result == 1) {
-                        takePicture();
-                        stopScan();
-                    }
+                if (previewDataQueue.size() <= 10) {
+                    previewDataQueue.offer(data);
                 }
             }
         });
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        previewThread.interrupt();
     }
 
     public Rect getAdjustPictureMaskRect() {

@@ -59,8 +59,9 @@ public class MainActivity extends AppCompatActivity {
                     int maskY = (int) ((int) maskRect.top * radio);
                     int maskW = (int) ((int) maskRect.width() * radio);
                     int maskH = (int) ((int) maskRect.height() * radio);
-                    Bitmap bitmap = Bitmap.createBitmap(maskW, maskH, Bitmap.Config.ARGB_8888);
-                    SmartScanner.cropRect(data, size.getWidth(), size.getHeight(), previewRotation, maskX,maskY,maskW,maskH, bitmap);
+                    float scaleRatio = 0.5f;
+                    Bitmap bitmap = Bitmap.createBitmap(Math.round(scaleRatio * maskW), Math.round(scaleRatio * maskH), Bitmap.Config.ARGB_8888);
+                    SmartScanner.cropRect(data, size.getWidth(), size.getHeight(), previewRotation, maskX,maskY,maskW,maskH, bitmap, scaleRatio);
                     imageView.setImageBitmap(bitmap);
                 }
             }

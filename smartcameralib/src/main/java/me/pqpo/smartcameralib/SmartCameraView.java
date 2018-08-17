@@ -52,7 +52,7 @@ public class SmartCameraView extends CameraView {
                     int maskY = (int) ((int) maskRect.top * radio);
                     int maskW = (int) ((int) maskRect.width() * radio);
                     int maskH = (int) ((int) maskRect.height() * radio);
-                    int round = Math.round(Math.min(maskW, maskH) * 1.0f * 0.18f);
+                    int round = Math.round(Math.min(maskW, maskH) * 1.0f * 0.2f);
                     int scan = SmartScanner.scan(data, size.getWidth(), size.getHeight(), previewRotation, maskX, maskY, maskW, maskH, round);
                     if (scan == 1) {
                         takePicture();

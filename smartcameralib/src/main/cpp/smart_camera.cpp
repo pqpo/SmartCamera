@@ -45,7 +45,7 @@ void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation,
     GaussianBlur(grayMat, blurMat2, Size(3,3), 0);
 
     Mat cannyMat;
-    Canny(blurMat2, cannyMat, 5, 100, 3);
+    Canny(blurMat2, cannyMat, 5, 50, 3);
     Mat thresholdMat;
     threshold(cannyMat, thresholdMat, 128, 255, CV_THRESH_OTSU);
     outMat = thresholdMat;
@@ -83,16 +83,11 @@ void drawLines(Mat &src, vector<Vec2f> &lines) {
     }
 }
 
-void drawDetectLines(Mat& image,const vector<Vec4i>& lines, Scalar& color) {
-     // 将检测到的直线在图上画出来
-     vector<Vec4i>::const_iterator it=lines.begin();
-     while(it!=lines.end())
-    {
-        Point pt1((*it)[0],(*it)[1]);
-        Point pt2((*it)[2],(*it)[3]);
-        line(image,pt1,pt2,color,2); //  线条宽度设置为2
-        ++it;
-    }
+vector<Vec2f> checkLines(Mat &scr, int houghThreshold) {
+    vector<Vec2f>lines;//矢量结构lines用于存放得到的线段矢量集合
+    HoughLines(scr, lines, 2, CV_PI / 180, houghThreshold);
+    int lineSize = lines.size();
+    return lines;
 }
 
 extern "C"
@@ -105,27 +100,11 @@ Java_me_pqpo_smartcameralib_SmartScanner_cropRect(JNIEnv *env, jclass type, jbyt
     Mat outMat;
     processMat(yuvData, outMat, width, height, rotation, x, y, maskWidth, maskHeight, ratio);
 
-    int houghThreshold = cvRound(min(outMat.rows, outMat.cols) * 0.45);
-    vector<Vec2f>lines;//矢量结构lines用于存放得到的线段矢量集合
-    HoughLines(outMat, lines, 2, CV_PI / 180, houghThreshold);
+    vector<Vec2f> lines = checkLines(outMat, cvRound(min(outMat.rows, outMat.cols) * 0.5));
     drawLines(outMat, lines);
-
-//    vector<Vec4i> lines;
-//    int matH = outMat.rows;
-//    // 检测直线，最小投票为90，线条不短于50，间隙不小于10
-//    HoughLinesP(outMat, lines, 2, CV_PI/180, matH / 5);
-//    Scalar color = Scalar(0,255,0);
-//    drawDetectLines(outMat,lines, color);
 
     mat_to_bitmap(env, outMat, result);
     env->ReleaseByteArrayElements(yuvData_, yuvData, 0);
-}
-
-vector<Vec2f> checkLines(Mat &scr) {
-    int houghThreshold = cvRound(max(scr.rows, scr.cols) * 0.45);
-    vector<Vec2f>lines;//矢量结构lines用于存放得到的线段矢量集合
-    HoughLines(scr, lines, 2, CV_PI / 180, houghThreshold);
-    return lines;
 }
 
 extern "C"
@@ -133,36 +112,40 @@ JNIEXPORT jint JNICALL
 Java_me_pqpo_smartcameralib_SmartScanner_scan(JNIEnv *env, jclass type, jbyteArray yuvData_,
                                               jint width, jint height, jint rotation, jint x,
                                               jint y, jint maskWidth, jint maskHeight,
-                                              jint threshold) {
+                                              jint maskThreshold) {
     jbyte *yuvData = env->GetByteArrayElements(yuvData_, NULL);
     Mat outMat;
-    processMat(yuvData, outMat, width, height, rotation, x, y, maskWidth, maskHeight, 0.3);
-    threshold = cvRound(threshold * 0.3f);
+    processMat(yuvData, outMat, width, height, rotation, x, y, maskWidth, maskHeight, 0.2f);
+
+    maskThreshold = cvRound(maskThreshold * 0.3f);
     int matH = outMat.rows;
     int matW = outMat.cols;
-    Rect rect(0, 0, threshold, matH);
+    Rect rect(0, 0, maskThreshold, matH);
     Mat croppedMatL = outMat(rect);
     rect.x = 0;
     rect.y = 0;
     rect.width = matW;
-    rect.height = threshold;
+    rect.height = maskThreshold;
     Mat croppedMatT = outMat(rect);
-    rect.x = matW - threshold;
+    rect.x = matW - maskThreshold;
     rect.y = 0;
-    rect.width = threshold;
+    rect.width = maskThreshold;
     rect.height = matH;
     Mat croppedMatR = outMat(rect);
     rect.x = 0;
-    rect.y = matH - threshold;
+    rect.y = matH - maskThreshold;
     rect.width = matW;
-    rect.height = threshold;
+    rect.height = maskThreshold;
     Mat croppedMatB = outMat(rect);
 
     env->ReleaseByteArrayElements(yuvData_, yuvData, 0);
-    if(checkLines(croppedMatL).size() > 0 && checkLines(croppedMatT).size() && checkLines(croppedMatR).size() && checkLines(croppedMatB).size()) {
-        return 1;
+
+    int houghThreshold = cvRound(min(outMat.rows, outMat.cols) * 0.5);
+    if(checkLines(croppedMatL, houghThreshold).size() == 0 || checkLines(croppedMatT, houghThreshold).size() == 0
+       || checkLines(croppedMatR, houghThreshold).size() == 0 || checkLines(croppedMatB, houghThreshold).size() == 0) {
+        return 0;
     }
-    return 0;
+    return 1;
 }
 
 //顺时针90

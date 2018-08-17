@@ -1,15 +1,20 @@
 package me.pqpo.smartcamera;
 
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.RectF;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 
 import com.google.android.cameraview.CameraView;
+import com.google.android.cameraview.Size;
 
 import me.pqpo.smartcameralib.SmartCameraView;
+import me.pqpo.smartcameralib.SmartScanner;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -24,13 +29,19 @@ public class MainActivity extends AppCompatActivity {
 
         mCameraView = findViewById(R.id.sample_text);
         imageView = findViewById(R.id.image);
+        if (preview) {
+            imageView.setVisibility(View.VISIBLE);
+            mCameraView.stopScan();
+        }
         mCameraView.addCallback(new CameraView.Callback() {
 
             @Override
             public void onPictureTaken(CameraView cameraView, byte[] data) {
                 super.onPictureTaken(cameraView, data);
-                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                imageView.setImageBitmap(bitmap);
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inSampleSize = 3;
+                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+                showPicture(bitmap);
             }
 
             @Override
@@ -39,34 +50,40 @@ public class MainActivity extends AppCompatActivity {
                 if (data == null || !preview) {
                     return;
                 }
-//                Size size = cameraView.getPreviewSize();
-//                if (size != null) {
-//                    int previewRotation = cameraView.getPreviewRotation();
-//                    RectF maskRect = mCameraView.getMaskRect();
-//                    float radio;
-//                    if (previewRotation == 90 || previewRotation == 270) {
-//                        radio = 1.0f * size.getHeight() / mCameraView.getWidth();
-//                    } else {
-//                        radio = 1.0f * size.getWidth() / mCameraView.getWidth();
-//                    }
-//                    int maskX = (int) ((int) maskRect.left * radio);
-//                    int maskY = (int) ((int) maskRect.top * radio);
-//                    int maskW = (int) ((int) maskRect.width() * radio);
-//                    int maskH = (int) ((int) maskRect.height() * radio);
-//                    float scaleRatio = 0.3f;
-//                    Bitmap bitmap = Bitmap.createBitmap(Math.round(scaleRatio * maskW), Math.round(scaleRatio * maskH), Bitmap.Config.ARGB_8888);
-//                    SmartScanner.cropRect(data, size.getWidth(), size.getHeight(), previewRotation, maskX,maskY,maskW,maskH, bitmap, scaleRatio);
-//                    imageView.setImageBitmap(bitmap);
-//                }
+                Size size = cameraView.getPreviewSize();
+                if (size != null) {
+                    int previewRotation = cameraView.getPreviewRotation();
+                    RectF maskRect = mCameraView.getMaskRect();
+                    float radio;
+                    if (previewRotation == 90 || previewRotation == 270) {
+                        radio = 1.0f * size.getHeight() / mCameraView.getWidth();
+                    } else {
+                        radio = 1.0f * size.getWidth() / mCameraView.getWidth();
+                    }
+                    int maskX = (int) ((int) maskRect.left * radio);
+                    int maskY = (int) ((int) maskRect.top * radio);
+                    int maskW = (int) ((int) maskRect.width() * radio);
+                    int maskH = (int) ((int) maskRect.height() * radio);
+                    float scaleRatio = 0.2f;
+                    Bitmap bitmap = Bitmap.createBitmap(Math.round(scaleRatio * maskW), Math.round(scaleRatio * maskH), Bitmap.Config.ARGB_8888);
+                    SmartScanner.cropRect(data, size.getWidth(), size.getHeight(), previewRotation, maskX,maskY,maskW,maskH, bitmap, scaleRatio);
+                    imageView.setImageBitmap(bitmap);
+                }
             }
         });
-        imageView.setOnClickListener(new View.OnClickListener() {
+    }
+
+    private void showPicture(Bitmap bitmap) {
+        ImageView imageView = new ImageView(this);
+        imageView.setImageBitmap(bitmap);
+        AlertDialog alertDialog = new AlertDialog.Builder(this).setView(imageView).create();
+        alertDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
-            public void onClick(View v) {
+            public void onDismiss(DialogInterface dialog) {
                 mCameraView.startScan();
-                preview = false;
             }
         });
+        alertDialog.show();
     }
 
     protected void onResume() {

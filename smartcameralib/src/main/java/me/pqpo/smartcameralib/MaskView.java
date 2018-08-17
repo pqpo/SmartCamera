@@ -121,11 +121,14 @@ public class MaskView extends View {
     }
 
     private void initMaskSize(int canvasWidth, int canvasHeight) {
-        if (maskWidth == -1) {
-            maskWidth = (int) (1.0f * canvasWidth * 2 / 3);
-        }
-        if (maskHeight == -1) {
-            maskHeight = (int) (1.0f * maskWidth / 0.65);
+        if (maskWidth == -1 || maskHeight == -1) {
+            if (canvasWidth < canvasHeight) {
+                maskWidth = (int) (1.0f * canvasWidth * 2 / 3);
+                maskHeight = (int) (1.0f * maskWidth / 0.65);
+            } else {
+                maskHeight = (int) (1.0f * canvasHeight * 2 / 3);
+                maskWidth = (int) (1.0f * maskHeight / 0.65);
+            }
         }
         maskWidth = Math.min(canvasWidth, maskWidth);
         maskHeight = Math.min(canvasHeight, maskHeight);

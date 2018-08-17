@@ -125,7 +125,7 @@ public class MaskView extends View {
             maskWidth = (int) (1.0f * canvasWidth * 2 / 3);
         }
         if (maskHeight == -1) {
-            maskHeight = (int) (1.0f * canvasHeight * 2 / 3);
+            maskHeight = (int) (1.0f * maskWidth / 0.65);
         }
         maskWidth = Math.min(canvasWidth, maskWidth);
         maskHeight = Math.min(canvasHeight, maskHeight);

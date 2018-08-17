@@ -18,6 +18,7 @@ import com.google.android.cameraview.Size;
 public class SmartCameraView extends CameraView {
 
     MaskView maskView;
+    private boolean scanPreview = true;
 
     public SmartCameraView(@NonNull Context context) {
         this(context, null);
@@ -34,25 +35,40 @@ public class SmartCameraView extends CameraView {
             @Override
             public void onPicturePreview(CameraView cameraView, byte[] data) {
                 super.onPicturePreview(cameraView, data);
-//                Size size = cameraView.getPreviewSize();
-//                if (size != null) {
-//                    int previewRotation = cameraView.getPreviewRotation();
-//                    RectF maskRect = getMaskRect();
-//                    float radio;
-//                    if (previewRotation == 90 || previewRotation == 270) {
-//                        radio = 1.0f * size.getHeight() / getWidth();
-//                    } else {
-//                        radio = 1.0f * size.getWidth() / getWidth();
-//                    }
-//                    int maskX = (int) ((int) maskRect.left * radio);
-//                    int maskY = (int) ((int) maskRect.top * radio);
-//                    int maskW = (int) ((int) maskRect.width() * radio);
-//                    int maskH = (int) ((int) maskRect.height() * radio);
-//                    Bitmap bitmap = Bitmap.createBitmap(maskW, maskH, Bitmap.Config.ARGB_8888);
-//                    SmartScanner.cropRect(data, size.getWidth(), size.getHeight(), previewRotation, maskX,maskY,maskW,maskH, bitmap);
-//                }
+                if (data == null || !scanPreview) {
+                    return;
+                }
+                Size size = cameraView.getPreviewSize();
+                if (size != null) {
+                    int previewRotation = cameraView.getPreviewRotation();
+                    RectF maskRect = getMaskRect();
+                    float radio;
+                    if (previewRotation == 90 || previewRotation == 270) {
+                        radio = 1.0f * size.getHeight() / getWidth();
+                    } else {
+                        radio = 1.0f * size.getWidth() / getWidth();
+                    }
+                    int maskX = (int) ((int) maskRect.left * radio);
+                    int maskY = (int) ((int) maskRect.top * radio);
+                    int maskW = (int) ((int) maskRect.width() * radio);
+                    int maskH = (int) ((int) maskRect.height() * radio);
+                    int round = Math.round(Math.min(maskW, maskH) * 1.0f * 0.18f);
+                    int scan = SmartScanner.scan(data, size.getWidth(), size.getHeight(), previewRotation, maskX, maskY, maskW, maskH, round);
+                    if (scan == 1) {
+                        takePicture();
+                        stopScan();
+                    }
+                }
             }
         });
+    }
+
+    public void startScan() {
+        scanPreview = true;
+    }
+
+    public void stopScan() {
+        scanPreview = false;
     }
 
     private void addMaskView() {

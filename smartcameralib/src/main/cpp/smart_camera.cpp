@@ -51,6 +51,50 @@ void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation,
     outMat = thresholdMat;
 }
 
+void drawLines(Mat &src, vector<Vec2f> &lines) {
+    // 以下遍历图像绘制每一条线
+    std::vector<cv::Vec2f>::const_iterator it= lines.begin();
+    while (it!=lines.end())
+    {
+        // 以下两个参数用来检测直线属于垂直线还是水平线
+        float rho= (*it)[0];   // 表示距离
+        float theta= (*it)[1]; // 表示角度
+
+        if (theta < CV_PI/4. || theta > 3.* CV_PI/4.) // 若检测为垂直线
+        {
+            // 得到线与第一行的交点
+            cv::Point pt1(cvRound(rho/cos(theta)),0);
+            // 得到线与最后一行的交点
+            cv::Point pt2(cvRound((rho - src.rows*sin(theta))/cos(theta)),src.rows);
+            // 调用line函数绘制直线
+            cv::line(src, pt1, pt2, cv::Scalar(255), 1);
+
+        }
+        else // 若检测为水平线
+        {
+            // 得到线与第一列的交点
+            cv::Point pt1(0,cvRound(rho/sin(theta)));
+            // 得到线与最后一列的交点
+            cv::Point pt2(src.cols,cvRound((rho-src.cols*cos(theta))/sin(theta)));
+            // 调用line函数绘制直线
+            cv::line(src, pt1, pt2, cv::Scalar(255), 1);
+        }
+        ++it;
+    }
+}
+
+void drawDetectLines(Mat& image,const vector<Vec4i>& lines, Scalar& color) {
+     // 将检测到的直线在图上画出来
+     vector<Vec4i>::const_iterator it=lines.begin();
+     while(it!=lines.end())
+    {
+        Point pt1((*it)[0],(*it)[1]);
+        Point pt2((*it)[2],(*it)[3]);
+        line(image,pt1,pt2,color,2); //  线条宽度设置为2
+        ++it;
+    }
+}
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_me_pqpo_smartcameralib_SmartScanner_cropRect(JNIEnv *env, jclass type, jbyteArray yuvData_,
@@ -60,8 +104,28 @@ Java_me_pqpo_smartcameralib_SmartScanner_cropRect(JNIEnv *env, jclass type, jbyt
     jbyte *yuvData = env->GetByteArrayElements(yuvData_, NULL);
     Mat outMat;
     processMat(yuvData, outMat, width, height, rotation, x, y, maskWidth, maskHeight, ratio);
+
+    int houghThreshold = cvRound(min(outMat.rows, outMat.cols) * 0.45);
+    vector<Vec2f>lines;//矢量结构lines用于存放得到的线段矢量集合
+    HoughLines(outMat, lines, 2, CV_PI / 180, houghThreshold);
+    drawLines(outMat, lines);
+
+//    vector<Vec4i> lines;
+//    int matH = outMat.rows;
+//    // 检测直线，最小投票为90，线条不短于50，间隙不小于10
+//    HoughLinesP(outMat, lines, 2, CV_PI/180, matH / 5);
+//    Scalar color = Scalar(0,255,0);
+//    drawDetectLines(outMat,lines, color);
+
     mat_to_bitmap(env, outMat, result);
     env->ReleaseByteArrayElements(yuvData_, yuvData, 0);
+}
+
+vector<Vec2f> checkLines(Mat &scr) {
+    int houghThreshold = cvRound(max(scr.rows, scr.cols) * 0.45);
+    vector<Vec2f>lines;//矢量结构lines用于存放得到的线段矢量集合
+    HoughLines(scr, lines, 2, CV_PI / 180, houghThreshold);
+    return lines;
 }
 
 extern "C"
@@ -72,10 +136,32 @@ Java_me_pqpo_smartcameralib_SmartScanner_scan(JNIEnv *env, jclass type, jbyteArr
                                               jint threshold) {
     jbyte *yuvData = env->GetByteArrayElements(yuvData_, NULL);
     Mat outMat;
-    processMat(yuvData, outMat, width, height, rotation, x, y, maskWidth, maskHeight, 1);
-
+    processMat(yuvData, outMat, width, height, rotation, x, y, maskWidth, maskHeight, 0.3);
+    threshold = cvRound(threshold * 0.3f);
+    int matH = outMat.rows;
+    int matW = outMat.cols;
+    Rect rect(0, 0, threshold, matH);
+    Mat croppedMatL = outMat(rect);
+    rect.x = 0;
+    rect.y = 0;
+    rect.width = matW;
+    rect.height = threshold;
+    Mat croppedMatT = outMat(rect);
+    rect.x = matW - threshold;
+    rect.y = 0;
+    rect.width = threshold;
+    rect.height = matH;
+    Mat croppedMatR = outMat(rect);
+    rect.x = 0;
+    rect.y = matH - threshold;
+    rect.width = matW;
+    rect.height = threshold;
+    Mat croppedMatB = outMat(rect);
 
     env->ReleaseByteArrayElements(yuvData_, yuvData, 0);
+    if(checkLines(croppedMatL).size() > 0 && checkLines(croppedMatT).size() && checkLines(croppedMatR).size() && checkLines(croppedMatB).size()) {
+        return 1;
+    }
     return 0;
 }
 

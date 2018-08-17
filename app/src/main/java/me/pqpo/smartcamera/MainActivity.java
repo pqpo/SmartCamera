@@ -2,27 +2,21 @@ package me.pqpo.smartcamera;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.graphics.RectF;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.google.android.cameraview.CameraView;
-import com.google.android.cameraview.Size;
 
 import me.pqpo.smartcameralib.SmartCameraView;
-import me.pqpo.smartcameralib.SmartScanner;
 
 
 public class MainActivity extends AppCompatActivity {
 
     SmartCameraView mCameraView;
     ImageView imageView;
-    boolean preivew = true;
-
+    boolean preview = true;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,35 +36,35 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPicturePreview(CameraView cameraView, byte[] data) {
                 super.onPicturePreview(cameraView, data);
-                if (data == null || !preivew) {
+                if (data == null || !preview) {
                     return;
                 }
-                Size size = cameraView.getPreviewSize();
-                if (size != null) {
-                    int previewRotation = cameraView.getPreviewRotation();
-                    RectF maskRect = mCameraView.getMaskRect();
-                    float radio;
-                    if (previewRotation == 90 || previewRotation == 270) {
-                        radio = 1.0f * size.getHeight() / mCameraView.getWidth();
-                    } else {
-                        radio = 1.0f * size.getWidth() / mCameraView.getWidth();
-                    }
-                    int maskX = (int) ((int) maskRect.left * radio);
-                    int maskY = (int) ((int) maskRect.top * radio);
-                    int maskW = (int) ((int) maskRect.width() * radio);
-                    int maskH = (int) ((int) maskRect.height() * radio);
-                    float scaleRatio = 0.5f;
-                    Bitmap bitmap = Bitmap.createBitmap(Math.round(scaleRatio * maskW), Math.round(scaleRatio * maskH), Bitmap.Config.ARGB_8888);
-                    SmartScanner.cropRect(data, size.getWidth(), size.getHeight(), previewRotation, maskX,maskY,maskW,maskH, bitmap, scaleRatio);
-                    imageView.setImageBitmap(bitmap);
-                }
+//                Size size = cameraView.getPreviewSize();
+//                if (size != null) {
+//                    int previewRotation = cameraView.getPreviewRotation();
+//                    RectF maskRect = mCameraView.getMaskRect();
+//                    float radio;
+//                    if (previewRotation == 90 || previewRotation == 270) {
+//                        radio = 1.0f * size.getHeight() / mCameraView.getWidth();
+//                    } else {
+//                        radio = 1.0f * size.getWidth() / mCameraView.getWidth();
+//                    }
+//                    int maskX = (int) ((int) maskRect.left * radio);
+//                    int maskY = (int) ((int) maskRect.top * radio);
+//                    int maskW = (int) ((int) maskRect.width() * radio);
+//                    int maskH = (int) ((int) maskRect.height() * radio);
+//                    float scaleRatio = 0.3f;
+//                    Bitmap bitmap = Bitmap.createBitmap(Math.round(scaleRatio * maskW), Math.round(scaleRatio * maskH), Bitmap.Config.ARGB_8888);
+//                    SmartScanner.cropRect(data, size.getWidth(), size.getHeight(), previewRotation, maskX,maskY,maskW,maskH, bitmap, scaleRatio);
+//                    imageView.setImageBitmap(bitmap);
+//                }
             }
         });
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mCameraView.takePicture();
-                preivew = false;
+                mCameraView.startScan();
+                preview = false;
             }
         });
     }

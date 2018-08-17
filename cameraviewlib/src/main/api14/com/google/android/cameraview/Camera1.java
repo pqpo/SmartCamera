@@ -119,6 +119,18 @@ class Camera1 extends CameraViewImpl {
     }
 
     @Override
+    public Size getPictureSize() {
+        if (mCameraParameters == null) {
+            return null;
+        }
+        Camera.Size pictureSize = mCameraParameters.getPictureSize();
+        if (pictureSize != null) {
+            return new Size(pictureSize.width, pictureSize.height);
+        }
+        return null;
+    }
+
+    @Override
     public int getPreviewRotation() {
         return calcCameraRotation(mDisplayOrientation);
     }

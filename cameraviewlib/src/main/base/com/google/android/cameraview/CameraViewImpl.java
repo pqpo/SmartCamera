@@ -73,6 +73,8 @@ abstract class CameraViewImpl {
 
     public abstract int getPreviewRotation();
 
+    public abstract Size getPictureSize();
+
     interface Callback {
 
         void onCameraOpened();

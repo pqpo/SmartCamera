@@ -262,6 +262,10 @@ public class CameraView extends FrameLayout {
         return mImpl.getPreviewSize();
     }
 
+    public Size getPictureSize() {
+        return mImpl.getPictureSize();
+    }
+
     /**
      * Stop camera preview and close the device. This is typically called from
      * {@link Activity#onPause()}.

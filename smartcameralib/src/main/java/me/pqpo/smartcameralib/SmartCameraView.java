@@ -1,7 +1,6 @@
 package me.pqpo.smartcameralib;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.support.annotation.NonNull;
@@ -41,11 +40,11 @@ public class SmartCameraView extends CameraView {
                 }
                 int previewRotation = cameraView.getPreviewRotation();
                 Size size = cameraView.getPreviewSize();
-                Rect revisedMaskRect = getRevisedMaskRect();
-                if (revisedMaskRect != null) {
-                    int result = SmartScanner.scan(data, size.getWidth(), size.getHeight(), previewRotation,
+                Rect revisedMaskRect = getAdjustPreviewMaskRect();
+                if (revisedMaskRect != null && size != null) {
+                    int result = SmartScanner.previewScan(data, size.getWidth(), size.getHeight(), previewRotation,
                             revisedMaskRect.left, revisedMaskRect.top, revisedMaskRect.width(), revisedMaskRect.height(),
-                            0.8f);
+                            null, 0.3f, 0.7f);
                     if (result == 1) {
                         takePicture();
                         stopScan();
@@ -55,23 +54,32 @@ public class SmartCameraView extends CameraView {
         });
     }
 
-    public Rect getRevisedMaskRect() {
+    public Rect getAdjustPictureMaskRect() {
+        Size size = getPictureSize();
+        return getAdjustMaskRect(size);
+    }
+
+    public Rect getAdjustPreviewMaskRect() {
         Size size = getPreviewSize();
+        return getAdjustMaskRect(size);
+    }
+
+    public Rect getAdjustMaskRect(Size size) {
         if (size != null) {
             int previewRotation = getPreviewRotation();
             RectF maskRect = getMaskRect();
             int cameraViewWidth = getWidth();
-            int mCameraViewHeight = getHeight();
-            int previewWidth;
-            int previewHeight;
+            int cameraViewHeight = getHeight();
+            int picW;
+            int picH;
             if (previewRotation == 90 || previewRotation == 270) {
-                previewWidth = size.getHeight();
-                previewHeight = size.getWidth();
+                picW = size.getHeight();
+                picH = size.getWidth();
             } else {
-                previewWidth = size.getWidth();
-                previewHeight = size.getHeight();
+                picW = size.getWidth();
+                picH = size.getHeight();
             }
-            float radio = Math.min(1.0f * previewWidth / cameraViewWidth, 1.0f * previewHeight / mCameraViewHeight);
+            float radio = Math.min(1.0f * picW / cameraViewWidth, 1.0f * picH / cameraViewHeight);
             int maskX = (int) ((int) maskRect.left * radio);
             int maskY = (int) ((int) maskRect.top * radio);
             int maskW = (int) ((int) maskRect.width() * radio);

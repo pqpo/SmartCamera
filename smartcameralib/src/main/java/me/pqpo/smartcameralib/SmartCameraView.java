@@ -2,6 +2,7 @@ package me.pqpo.smartcameralib;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -38,29 +39,46 @@ public class SmartCameraView extends CameraView {
                 if (data == null || !scanPreview) {
                     return;
                 }
+                int previewRotation = cameraView.getPreviewRotation();
                 Size size = cameraView.getPreviewSize();
-                if (size != null) {
-                    int previewRotation = cameraView.getPreviewRotation();
-                    RectF maskRect = getMaskRect();
-                    float radio;
-                    if (previewRotation == 90 || previewRotation == 270) {
-                        radio = 1.0f * size.getHeight() / getWidth();
-                    } else {
-                        radio = 1.0f * size.getWidth() / getWidth();
-                    }
-                    int maskX = (int) ((int) maskRect.left * radio);
-                    int maskY = (int) ((int) maskRect.top * radio);
-                    int maskW = (int) ((int) maskRect.width() * radio);
-                    int maskH = (int) ((int) maskRect.height() * radio);
-                    int round = Math.round(Math.min(maskW, maskH) * 1.0f * 0.2f);
-                    int scan = SmartScanner.scan(data, size.getWidth(), size.getHeight(), previewRotation, maskX, maskY, maskW, maskH, round);
-                    if (scan == 1) {
+                Rect revisedMaskRect = getRevisedMaskRect();
+                if (revisedMaskRect != null) {
+                    int result = SmartScanner.scan(data, size.getWidth(), size.getHeight(), previewRotation,
+                            revisedMaskRect.left, revisedMaskRect.top, revisedMaskRect.width(), revisedMaskRect.height(),
+                            0.8f);
+                    if (result == 1) {
                         takePicture();
                         stopScan();
                     }
                 }
             }
         });
+    }
+
+    public Rect getRevisedMaskRect() {
+        Size size = getPreviewSize();
+        if (size != null) {
+            int previewRotation = getPreviewRotation();
+            RectF maskRect = getMaskRect();
+            int cameraViewWidth = getWidth();
+            int mCameraViewHeight = getHeight();
+            int previewWidth;
+            int previewHeight;
+            if (previewRotation == 90 || previewRotation == 270) {
+                previewWidth = size.getHeight();
+                previewHeight = size.getWidth();
+            } else {
+                previewWidth = size.getWidth();
+                previewHeight = size.getHeight();
+            }
+            float radio = Math.min(1.0f * previewWidth / cameraViewWidth, 1.0f * previewHeight / mCameraViewHeight);
+            int maskX = (int) ((int) maskRect.left * radio);
+            int maskY = (int) ((int) maskRect.top * radio);
+            int maskW = (int) ((int) maskRect.width() * radio);
+            int maskH = (int) ((int) maskRect.height() * radio);
+            return new Rect(maskX, maskY, maskX + maskW, maskY + maskH);
+        }
+        return null;
     }
 
     public void startScan() {

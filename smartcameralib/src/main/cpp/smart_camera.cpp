@@ -5,6 +5,8 @@
 #include <android/bitmap.h>
 #include <android_utils.h>
 #include "jni.h"
+#include <android/log.h>
+#include <sstream>
 
 using namespace cv;
 
@@ -45,9 +47,9 @@ void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation,
     GaussianBlur(grayMat, blurMat2, Size(3,3), 0);
 
     Mat cannyMat;
-    Canny(blurMat2, cannyMat, 5, 50, 3);
+    Canny(blurMat2, cannyMat, 5, 80);
     Mat thresholdMat;
-    threshold(cannyMat, thresholdMat, 128, 255, CV_THRESH_OTSU);
+    threshold(cannyMat, thresholdMat, 0, 255, CV_THRESH_OTSU);
     outMat = thresholdMat;
 }
 
@@ -90,8 +92,32 @@ vector<Vec2f> checkLines(Mat &scr, int houghThreshold) {
     return lines;
 }
 
+vector<Point> findMaxContours(Mat &src) {
+    vector<vector<Point>> contours;
+    findContours(src, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+    vector<Point> maxAreaPoints;
+    double maxArea = 0;
+    vector<vector<Point>>::const_iterator it= contours.begin();
+    while (it!=contours.end()) {
+        vector<Point> item = *it;
+        double area = contourArea(Mat(item));
+        if(area > maxArea) {
+            maxArea = area;
+            maxAreaPoints = item;
+        }
+        ++it;
+    }
+    vector<Point> outDP;
+    if(maxAreaPoints.size() > 0) {
+        double arc = arcLength(maxAreaPoints, true);
+        //多变形逼近
+        approxPolyDP(Mat(maxAreaPoints), outDP, 0.02*arc, true);
+    }
+    return outDP;
+}
+
 extern "C"
-JNIEXPORT void JNICALL
+JNIEXPORT jint JNICALL
 Java_me_pqpo_smartcameralib_SmartScanner_cropRect(JNIEnv *env, jclass type, jbyteArray yuvData_,
                                                   jint width, jint height, jint rotation, jint x,
                                                   jint y, jint maskWidth, jint maskHeight,
@@ -100,11 +126,28 @@ Java_me_pqpo_smartcameralib_SmartScanner_cropRect(JNIEnv *env, jclass type, jbyt
     Mat outMat;
     processMat(yuvData, outMat, width, height, rotation, x, y, maskWidth, maskHeight, ratio);
 
-    vector<Vec2f> lines = checkLines(outMat, cvRound(min(outMat.rows, outMat.cols) * 0.5));
-    drawLines(outMat, lines);
-
-    mat_to_bitmap(env, outMat, result);
+    vector<Point> outDP = findMaxContours(outMat);
+    if (result != NULL) {
+        if(outDP.size() == 4) {
+            line(outMat, outDP[0], outDP[1], cv::Scalar(255), 1);
+            line(outMat, outDP[1], outDP[2], cv::Scalar(255), 1);
+            line(outMat, outDP[2], outDP[3], cv::Scalar(255), 1);
+            line(outMat, outDP[3], outDP[0], cv::Scalar(255), 1);
+        }
+        mat_to_bitmap(env, outMat, result);
+    }
     env->ReleaseByteArrayElements(yuvData_, yuvData, 0);
+    if(outDP.size() == 4) {
+        double maskArea = outMat.rows * outMat.cols;
+        double realArea = contourArea(outDP);
+        std::ostringstream logstr;
+        logstr << "maskArea:" << maskArea << " realArea: " << realArea << std::endl;
+        __android_log_write(ANDROID_LOG_DEBUG, "smart_camera.cpp", logstr.str().c_str());
+        if (maskArea != 0 && (realArea / maskArea) >= 0.8)  {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 extern "C"
@@ -112,40 +155,24 @@ JNIEXPORT jint JNICALL
 Java_me_pqpo_smartcameralib_SmartScanner_scan(JNIEnv *env, jclass type, jbyteArray yuvData_,
                                               jint width, jint height, jint rotation, jint x,
                                               jint y, jint maskWidth, jint maskHeight,
-                                              jint maskThreshold) {
+                                              jfloat maskThreshold) {
     jbyte *yuvData = env->GetByteArrayElements(yuvData_, NULL);
     Mat outMat;
-    processMat(yuvData, outMat, width, height, rotation, x, y, maskWidth, maskHeight, 0.2f);
-
-    maskThreshold = cvRound(maskThreshold * 0.3f);
-    int matH = outMat.rows;
-    int matW = outMat.cols;
-    Rect rect(0, 0, maskThreshold, matH);
-    Mat croppedMatL = outMat(rect);
-    rect.x = 0;
-    rect.y = 0;
-    rect.width = matW;
-    rect.height = maskThreshold;
-    Mat croppedMatT = outMat(rect);
-    rect.x = matW - maskThreshold;
-    rect.y = 0;
-    rect.width = maskThreshold;
-    rect.height = matH;
-    Mat croppedMatR = outMat(rect);
-    rect.x = 0;
-    rect.y = matH - maskThreshold;
-    rect.width = matW;
-    rect.height = maskThreshold;
-    Mat croppedMatB = outMat(rect);
-
+    processMat(yuvData, outMat, width, height, rotation, x, y, maskWidth, maskHeight, 0.3f);
     env->ReleaseByteArrayElements(yuvData_, yuvData, 0);
 
-    int houghThreshold = cvRound(min(outMat.rows, outMat.cols) * 0.5);
-    if(checkLines(croppedMatL, houghThreshold).size() == 0 || checkLines(croppedMatT, houghThreshold).size() == 0
-       || checkLines(croppedMatR, houghThreshold).size() == 0 || checkLines(croppedMatB, houghThreshold).size() == 0) {
-        return 0;
+    vector<Point> outDP = findMaxContours(outMat);
+    if(outDP.size() == 4) {
+        double maskArea = outMat.rows * outMat.cols;
+        double realArea = contourArea(outDP);
+        std::ostringstream logstr;
+        logstr << "maskArea:" << maskArea << " realArea: " << realArea << std::endl;
+        __android_log_write(ANDROID_LOG_DEBUG, "smart_camera.cpp", logstr.str().c_str());
+        if (maskArea != 0 && (realArea / maskArea) >= maskThreshold)  {
+            return 1;
+        }
     }
-    return 1;
+    return 0;
 }
 
 //顺时针90

@@ -42,54 +42,13 @@ public class SmartCameraView extends CameraView {
 
     public SmartCameraView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        uiHandler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                super.handleMessage(msg);
-                int result = msg.what;
-                if (onScanResultListener == null
-                        || !onScanResultListener.onScanResult(SmartCameraView.this, result)) {
-                    if (result == 1) {
-                        takePicture();
-                        stopScan();
-                    }
-                }
-            }
-        };
+        init();
+    }
+
+    private void init() {
+        uiHandler = new ScanResultHandler(this);
         previewDataQueue = new ConcurrentLinkedQueue<>();
-        previewThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (!previewThread.isInterrupted()) {
-                    byte[] data = previewDataQueue.poll();
-                    if (data != null) {
-                        int previewRotation = getPreviewRotation();
-                        Size size = getPreviewSize();
-                        Rect revisedMaskRect = getAdjustPreviewMaskRect();
-                        float scaleRatio = 0.3f;
-                        if (revisedMaskRect != null && size != null) {
-                            if (preview && previewBitmap == null) {
-                                previewBitmap = Bitmap.createBitmap(Math.round(scaleRatio * revisedMaskRect.width()),
-                                        Math.round(scaleRatio * revisedMaskRect.height()), Bitmap.Config.ARGB_8888);
-                            }
-                            int result = SmartScanner.previewScan(data, size.getWidth(), size.getHeight(), previewRotation,
-                                    revisedMaskRect.left, revisedMaskRect.top, revisedMaskRect.width(), revisedMaskRect.height(),
-                                    previewBitmap, scaleRatio, 0.7f);
-                            uiHandler.sendEmptyMessage(result);
-                            if (result == 1) {
-                                uiHandler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        takePicture();
-                                        stopScan();
-                                    }
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        });
+        previewThread = new ScanThread();
         previewThread.start();
 
         addMaskView();
@@ -185,6 +144,62 @@ public class SmartCameraView extends CameraView {
 
     public interface OnScanResultListener {
         boolean onScanResult(SmartCameraView smartCameraView, int result);
+    }
+
+    private class ScanThread extends Thread {
+
+        public ScanThread() {
+            super("ScanThread");
+        }
+
+        @Override
+        public void run() {
+            super.run();
+            while (!previewThread.isInterrupted()) {
+                byte[] data = previewDataQueue.poll();
+                if (data != null && scanning) {
+                    int previewRotation = getPreviewRotation();
+                    Size size = getPreviewSize();
+                    Rect revisedMaskRect = getAdjustPreviewMaskRect();
+                    float scaleRatio = 0.5f;
+                    if (revisedMaskRect != null && size != null) {
+                        if (preview && previewBitmap == null) {
+                            previewBitmap = Bitmap.createBitmap(Math.round(scaleRatio * revisedMaskRect.width()),
+                                    Math.round(scaleRatio * revisedMaskRect.height()), Bitmap.Config.ARGB_8888);
+                        }
+                        int result = SmartScanner.previewScan(data, size.getWidth(), size.getHeight(), previewRotation,
+                                revisedMaskRect.left, revisedMaskRect.top, revisedMaskRect.width(), revisedMaskRect.height(),
+                                previewBitmap, scaleRatio, 0.85f);
+                        uiHandler.sendEmptyMessage(result);
+                    }
+                }
+            }
+        }
+    }
+
+    private static class ScanResultHandler extends Handler {
+
+        SmartCameraView smartCameraView;
+
+        public ScanResultHandler(SmartCameraView smartCameraView) {
+            this.smartCameraView = smartCameraView;
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            if(!smartCameraView.scanning) {
+                return;
+            }
+            int result = msg.what;
+            if (smartCameraView.onScanResultListener == null
+                    || !smartCameraView.onScanResultListener.onScanResult(smartCameraView, result)) {
+                if (result == 1) {
+                    smartCameraView.takePicture();
+                    smartCameraView.stopScan();
+                }
+            }
+        }
     }
 
 }

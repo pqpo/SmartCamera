@@ -39,12 +39,12 @@ void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation,
     Mat blurMat;
     GaussianBlur(resizeMat, blurMat, Size(3,3), 0);
     Mat grayMat;
-    cvtColor(resizeMat, grayMat, CV_RGB2GRAY);
+    cvtColor(blurMat, grayMat, CV_RGB2GRAY);
     Mat blurMat2;
     GaussianBlur(grayMat, blurMat2, Size(3,3), 0);
 
     Mat cannyMat;
-    Canny(blurMat2, cannyMat, 0, 5);
+    Canny(blurMat2, cannyMat, 5, 80);
     Mat thresholdMat;
     threshold(cannyMat, thresholdMat, 0, 255, CV_THRESH_OTSU);
     outMat = thresholdMat;

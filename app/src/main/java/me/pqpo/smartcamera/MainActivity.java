@@ -21,8 +21,6 @@ public class MainActivity extends AppCompatActivity {
 
     private SmartCameraView mCameraView;
     private ImageView imageView;
-    private boolean preview = true;
-    private Bitmap previewBitmap;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,10 +37,19 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        if (preview) {
-            imageView.setVisibility(View.VISIBLE);
-            mCameraView.stopScan();
-        }
+        imageView.setVisibility(View.VISIBLE);
+        mCameraView.setPreview(true);
+        mCameraView.setOnScanResultListener(new SmartCameraView.OnScanResultListener() {
+            @Override
+            public boolean onScanResult(SmartCameraView smartCameraView, int result) {
+                Bitmap previewBitmap = smartCameraView.getPreviewBitmap();
+                if (previewBitmap != null) {
+                    imageView.setImageBitmap(previewBitmap);
+                }
+                return false;
+            }
+        });
+
         mCameraView.addCallback(new CameraView.Callback() {
 
             @Override
@@ -68,31 +75,6 @@ public class MainActivity extends AppCompatActivity {
 //                }
             }
 
-            @Override
-            public void onPicturePreview(CameraView cameraView, byte[] data) {
-                super.onPicturePreview(cameraView, data);
-                if (data == null || !preview) {
-                    return;
-                }
-                int previewRotation = cameraView.getPreviewRotation();
-                Size size = cameraView.getPreviewSize();
-                Rect revisedMaskRect = mCameraView.getAdjustPreviewMaskRect();
-                if (revisedMaskRect != null && size != null) {
-                    float scaleRatio = 0.2f;
-                    if (previewBitmap == null) {
-                        previewBitmap = Bitmap.createBitmap(Math.round(scaleRatio * revisedMaskRect.width()),
-                                Math.round(scaleRatio * revisedMaskRect.height()), Bitmap.Config.ARGB_8888);
-                    }
-                    int result = SmartScanner.previewScan(data, size.getWidth(), size.getHeight(), previewRotation,
-                            revisedMaskRect.left, revisedMaskRect.top, revisedMaskRect.width(), revisedMaskRect.height(),
-                            previewBitmap, scaleRatio, 0.7f);
-                    imageView.setImageBitmap(previewBitmap);
-                    if (result == 1) {
-                        mCameraView.takePicture();
-                        mCameraView.stopScan();
-                    }
-                }
-            }
         });
     }
 

@@ -47,7 +47,7 @@ void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation,
     Canny(blurMat2, cannyMat, 0, 5);
     Mat thresholdMat;
     threshold(cannyMat, thresholdMat, 0, 255, CV_THRESH_OTSU);
-    outMat = cannyMat;
+    outMat = thresholdMat;
 }
 
 extern "C"
@@ -85,14 +85,18 @@ Java_me_pqpo_smartcameralib_SmartScanner_previewScan(JNIEnv *env, jclass type, j
     return 0;
 }
 
-extern "C"
-JNIEXPORT void JNICALL
-Java_me_pqpo_smartcameralib_SmartScanner_cropMask(JNIEnv *env, jclass type, jbyteArray data_,
-                                                  jint width, jint height, jint maskX, jint maskY,
-                                                  jint maskW, jint maskH, jobject outBitmap) {
-    jbyte *data = env->GetByteArrayElements(data_, NULL);
-    Mat image(height, width, CV_8UC4, (uchar *)data);
-    Rect rect(maskX, maskY, maskW, maskH);
-    Mat croppedMat = image(rect);
-    mat_to_bitmap(env, croppedMat, outBitmap);
-}
+//extern "C"
+//JNIEXPORT void JNICALL
+//Java_me_pqpo_smartcameralib_SmartScanner_cropMask(JNIEnv *env, jclass type, jbyteArray data_, jint dataSize,
+//                                                  jint width, jint height, jint maskX, jint maskY,
+//                                                  jint maskW, jint maskH, jobject outBitmap) {
+//    jbyte *data = env->GetByteArrayElements(data_, NULL);
+//
+//    vector<uchar> jpgbytes(data, data+dataSize);
+//    Mat image = imdecode(jpgbytes, CV_LOAD_IMAGE_UNCHANGED);
+//    cvtColor(image, image, CV_BGR2RGB);
+//
+//    Rect rect(maskX, maskY, maskW, maskH);
+//    Mat croppedMat = image(rect);
+//    mat_to_bitmap(env, croppedMat, outBitmap);
+//}

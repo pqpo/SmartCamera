@@ -7,6 +7,7 @@ import android.graphics.Rect;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -55,13 +56,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPictureTaken(CameraView cameraView, byte[] data) {
                 super.onPictureTaken(cameraView, data);
-                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
                 Rect revisedMaskRect = mCameraView.getAdjustPictureMaskRect();
+
+                long startTime = System.currentTimeMillis();
+                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
                 if (revisedMaskRect != null) {
                     bitmap = Bitmap.createBitmap(bitmap, revisedMaskRect.left, revisedMaskRect.top, revisedMaskRect.width(), revisedMaskRect.height());
                 }
                 showPicture(bitmap);
+                Log.d(MainActivity.class.getSimpleName(), (System.currentTimeMillis() - startTime) + "ms");
 
+//                startTime = System.currentTimeMillis();
 //                Size pictureSize = cameraView.getPictureSize();
 //                int previewRotation = cameraView.getPreviewRotation();
 //                if (pictureSize != null && (previewRotation == 90 || previewRotation == 270)) {
@@ -69,10 +74,11 @@ public class MainActivity extends AppCompatActivity {
 //                }
 //                if (pictureSize != null) {
 //                    Bitmap outBitmap = Bitmap.createBitmap(revisedMaskRect.width(), revisedMaskRect.height(), Bitmap.Config.ARGB_8888);
-//                    SmartScanner.cropMask(data, pictureSize.getWidth(), pictureSize.getHeight(),
+//                    SmartScanner.cropMask(data, data.length, pictureSize.getWidth(), pictureSize.getHeight(),
 //                            revisedMaskRect.left, revisedMaskRect.top, revisedMaskRect.width(), revisedMaskRect.height(), outBitmap);
 //                    showPicture(outBitmap);
 //                }
+//                Log.d(MainActivity.class.getSimpleName(), (System.currentTimeMillis() - startTime) + "ms");
             }
 
         });

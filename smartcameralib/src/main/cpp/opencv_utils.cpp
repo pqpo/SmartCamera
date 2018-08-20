@@ -47,7 +47,7 @@ vector<Vec2f> checkLines(Mat &scr, int houghThreshold) {
 
 vector<Point> findMaxContours(Mat &src) {
     vector<vector<Point>> contours;
-    findContours(src, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+    findContours(src, contours, RETR_LIST, CHAIN_APPROX_SIMPLE);
     vector<Point> maxAreaPoints;
     double maxArea = 0;
     vector<vector<Point>>::const_iterator it= contours.begin();

@@ -27,6 +27,8 @@ public class MaskView extends View implements MaskViewImpl{
     private int radius = 20;
     private RectF maskRect = new RectF();
     private int maskAlpha = 0x99;
+    private int maskOffsetX = 0;
+    private int maskOffsetY = 0;
     private int maskWidth = -1;
     private int maskHeight = -1;
     private int maskLineColor = Color.WHITE;
@@ -80,6 +82,16 @@ public class MaskView extends View implements MaskViewImpl{
         scanGradientBitmap = null;
         this.maskWidth = mWidth;
         this.maskHeight = mHeight;
+        postInvalidateOnAnimation();
+    }
+
+    public void setMaskOffset(int maskOffsetX, int maskOffsetY) {
+        if (this.maskOffsetX == maskOffsetX && this.maskOffsetY == maskOffsetY) {
+            return;
+        }
+        scanGradientBitmap = null;
+        this.maskOffsetX = maskOffsetX;
+        this.maskOffsetY = maskOffsetY;
         postInvalidateOnAnimation();
     }
 
@@ -204,10 +216,10 @@ public class MaskView extends View implements MaskViewImpl{
         float topBottomOffset = 0.5f * (canvasHeight - maskHeight);
         leftRightOffset = Math.max(0, leftRightOffset);
         topBottomOffset = Math.max(0, topBottomOffset);
-        maskRect.left = leftRightOffset;
-        maskRect.top = topBottomOffset;
-        maskRect.right = leftRightOffset + maskWidth;
-        maskRect.bottom = topBottomOffset + maskHeight;
+        maskRect.left = leftRightOffset + maskOffsetX;
+        maskRect.top = topBottomOffset + maskOffsetY;
+        maskRect.right = maskRect.left + maskWidth;
+        maskRect.bottom =  maskRect.top + maskHeight;
     }
 
 }

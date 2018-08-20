@@ -15,8 +15,8 @@
 
     <ImageView
         android:id="@+id/image"
-        android:layout_width="100dp"
-        android:layout_height="150dp"
+        android:layout_width="117dp"
+        android:layout_height="180dp"
         android:scaleType="fitCenter"
         android:layout_alignParentBottom="true"
         android:visibility="gone"

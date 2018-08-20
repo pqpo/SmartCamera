@@ -95,10 +95,10 @@ public class MainActivity extends AppCompatActivity {
                 int height = mCameraView.getHeight();
                 if (width < height) {
                     maskView.setMaskSize((int) (width * 0.6f), (int) (width * 0.6f / 0.63));
+                    maskView.setMaskOffset(0, -(int)(width * 0.1));
                 } else {
                     maskView.setMaskSize((int) (width * 0.6f), (int) (width * 0.6f * 0.63));
                 }
-
             }
         });
         mCameraView.setMaskView(maskView);

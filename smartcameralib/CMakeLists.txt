@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
-# set(NEED_TDD (EXISTS ${PROJECT_SOURCE_DIR}/opencv/lib/${ANDROID_ABI}/libtbb.a))
+set(NEED_TDD (EXISTS ${PROJECT_SOURCE_DIR}/opencv/lib/${ANDROID_ABI}/libtbb.a))
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../jniLibs/${ANDROID_ABI})
 include_directories(opencv/include
@@ -13,15 +13,15 @@ include_directories(opencv/include
 
 add_library(opencv_imgproc STATIC IMPORTED)
 add_library(opencv_core STATIC IMPORTED)
-# if(NEED_TDD)
-# add_library(tbb STATIC IMPORTED)
-# endif()
+if(NEED_TDD)
+add_library(tbb STATIC IMPORTED)
+endif()
 
 set_target_properties(opencv_imgproc PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/opencv/lib/${ANDROID_ABI}/libopencv_imgproc.a)
 set_target_properties(opencv_core PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/opencv/lib/${ANDROID_ABI}/libopencv_core.a)
-# if(NEED_TDD)
-# set_target_properties(tbb PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/opencv/lib/${ANDROID_ABI}/libtbb.a)
-# endif()
+if(NEED_TDD)
+set_target_properties(tbb PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/opencv/lib/${ANDROID_ABI}/libtbb.a)
+endif()
 
 
 # Creates and names a library, sets it as either STATIC
@@ -53,15 +53,25 @@ find_library(jnigraphics-lib
 # can link multiple libraries, such as libraries you define in this
 # build script, prebuilt third-party libraries, or system libraries.
 
+if(NEED_TDD)
 target_link_libraries( # Specifies the target library.
                          smart_camera
                          opencv_imgproc
                          opencv_core
-#                          if(NEED_TDD)
- #                         tbb
- #                         endif()
+                         tbb
 
                          # Links the target library to the log library
                          # included in the NDK.
                          ${log-lib}
                          ${jnigraphics-lib})
+else()
+target_link_libraries( # Specifies the target library.
+                         smart_camera
+                         opencv_imgproc
+                         opencv_core
+
+                         # Links the target library to the log library
+                         # included in the NDK.
+                         ${log-lib}
+                         ${jnigraphics-lib})
+endif()

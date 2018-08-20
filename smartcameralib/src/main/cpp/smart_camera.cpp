@@ -75,9 +75,9 @@ Java_me_pqpo_smartcameralib_SmartScanner_previewScan(JNIEnv *env, jclass type, j
     if(outDP.size() == 4) {
         double maskArea = outMat.rows * outMat.cols;
         double realArea = contourArea(outDP);
-//        std::ostringstream logstr;
-//        logstr << "maskArea:" << maskArea << " realArea: " << realArea << std::endl;
-//        __android_log_write(ANDROID_LOG_DEBUG, "smart_camera.cpp", logstr.str().c_str());
+//        std::ostringstream areaLog;
+//        areaLog << "maskArea:" << maskArea << " realArea: " << realArea << std::endl;
+//        __android_log_write(ANDROID_LOG_DEBUG, "smart_camera.cpp", areaLog.str().c_str());
         if (maskArea != 0 && (realArea / maskArea) >= checkRatio)  {
             return 1;
         }

@@ -10,28 +10,33 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
 import android.graphics.Shader;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewGroup;
 
 /**
  * Created by pqpo on 2018/8/15.
  */
-public class MaskView extends View {
+public class MaskView extends View implements MaskViewImpl{
 
     private Paint mMaskPaint;
-    private Paint mScanLinePaint;
     private PorterDuffXfermode porterDuffXfermode;
     private int radius = 20;
     private RectF maskRect = new RectF();
-    private int maskAlpha = 0xaa;
+    private int maskAlpha = 0x99;
     private int maskWidth = -1;
     private int maskHeight = -1;
     private int maskLineColor = Color.WHITE;
+    private int maskLineWidth = 1;
 
+    private boolean showScanLine = true;
+
+    private float currentScanningY = -1;
     private Bitmap scanGradientBitmap;
-    private int scanGradientSpread = 80;
+    private int scanGradientSpread = 100;
     private int scanSpeed = 10;
     private int scanStartColor = 0xFFFFFFFF;
     private int scanEndColor = 0x00FFFFFF;
@@ -46,9 +51,78 @@ public class MaskView extends View {
 
     public MaskView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        ViewGroup.MarginLayoutParams lp = new ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        setLayoutParams(lp);
         initMaskView();
     }
 
+    public void setShowScanLine(boolean showScanLine) {
+        this.showScanLine = showScanLine;
+        currentScanningY = -1;
+        scanGradientBitmap = null;
+        postInvalidateOnAnimation();
+    }
+
+    public void setMaskLineWidth(int maskLineWidth) {
+        this.maskLineWidth = maskLineWidth;
+        postInvalidateOnAnimation();
+    }
+
+    public void setMaskRadius(int radius) {
+        this.radius = radius;
+        postInvalidateOnAnimation();
+    }
+
+    public void setMaskSize(int mWidth, int mHeight) {
+        if (mWidth == maskWidth && mHeight == maskHeight) {
+            return;
+        }
+        scanGradientBitmap = null;
+        this.maskWidth = mWidth;
+        this.maskHeight = mHeight;
+        postInvalidateOnAnimation();
+    }
+
+    public void setMaskAlpha(int maskAlpha) {
+        this.maskAlpha = maskAlpha;
+        postInvalidateOnAnimation();
+    }
+
+    public void setMaskLineColor(int maskLineColor) {
+        this.maskLineColor = maskLineColor;
+        postInvalidateOnAnimation();
+    }
+
+    public void setScanLineGradient(@ColorInt int startColor, @ColorInt int endColor) {
+        if (this.scanStartColor == startColor && this.scanEndColor == endColor) {
+            return;
+        }
+        this.scanStartColor = startColor;
+        this.scanEndColor = endColor;
+        scanGradientBitmap = null;
+        postInvalidateOnAnimation();
+    }
+
+    public void setScanGradientSpread(int scanGradientSpread) {
+        if (this.scanGradientSpread == scanGradientSpread) {
+            return;
+        }
+        this.scanGradientSpread = scanGradientSpread;
+        scanGradientBitmap = null;
+        postInvalidateOnAnimation();
+    }
+
+    public void setScanSpeed(int scanSpeed) {
+        this.scanSpeed = scanSpeed;
+        postInvalidateOnAnimation();
+    }
+
+    @Override
+    public View getMaskView() {
+        return this;
+    }
+
+    @Override
     public RectF getMaskRect() {
         return maskRect;
     }
@@ -58,18 +132,15 @@ public class MaskView extends View {
         mMaskPaint = new Paint();
         setBackgroundColor(Color.TRANSPARENT);
         mMaskPaint.setAntiAlias(true);
-        mScanLinePaint = new Paint();
-        mScanLinePaint.setColor(Color.WHITE);
-        mScanLinePaint.setAntiAlias(true);
-        mScanLinePaint.setStyle(Paint.Style.FILL);
-        mScanLinePaint.setStrokeWidth(2);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         drawMask(canvas);
-        drawScanningLine(canvas);
+        if (showScanLine) {
+            drawScanningLine(canvas);
+        }
     }
 
     private void drawMask(Canvas canvas) {
@@ -81,17 +152,14 @@ public class MaskView extends View {
         mMaskPaint.setColor(Color.BLACK);
         canvas.drawRect(0,0, canvasWidth, canvasHeight, mMaskPaint);
         mMaskPaint.setXfermode(porterDuffXfermode);
-        mMaskPaint.setColor(Color.BLACK);
         canvas.drawRoundRect(maskRect, radius, radius, mMaskPaint);
         mMaskPaint.setXfermode(null);
         canvas.restoreToCount(sc);
         mMaskPaint.setColor(maskLineColor);
         mMaskPaint.setStyle(Paint.Style.STROKE);
-        mMaskPaint.setStrokeWidth(2);
+        mMaskPaint.setStrokeWidth(maskLineWidth);
         canvas.drawRoundRect(maskRect, radius, radius, mMaskPaint);
     }
-
-    private float currentScanningY = -1;
 
     private void drawScanningLine(Canvas canvas) {
         if (currentScanningY == -1) {

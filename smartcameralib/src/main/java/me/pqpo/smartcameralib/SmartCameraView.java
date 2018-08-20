@@ -2,6 +2,7 @@ package me.pqpo.smartcameralib;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Handler;
@@ -9,12 +10,15 @@ import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import com.google.android.cameraview.CameraView;
 import com.google.android.cameraview.Size;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -22,7 +26,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class SmartCameraView extends CameraView {
 
-    protected MaskView maskView;
+    private static final String TAG = "SmartCameraView";
+
+    protected MaskViewImpl maskView;
     protected boolean scanning = true;
     private Thread previewThread;
     private ConcurrentLinkedQueue<byte[]> previewDataQueue;
@@ -43,6 +49,7 @@ public class SmartCameraView extends CameraView {
     public SmartCameraView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
+        setMaskView(new MaskView(context));
     }
 
     private void init() {
@@ -51,7 +58,6 @@ public class SmartCameraView extends CameraView {
         previewThread = new ScanThread();
         previewThread.start();
 
-        addMaskView();
         addCallback(new Callback() {
             @Override
             public void onPicturePreview(CameraView cameraView, byte[] data) {
@@ -64,6 +70,10 @@ public class SmartCameraView extends CameraView {
                 }
             }
         });
+    }
+
+    public MaskViewImpl getMaskView() {
+        return maskView;
     }
 
     public Bitmap getPreviewBitmap() {
@@ -128,11 +138,15 @@ public class SmartCameraView extends CameraView {
         previewBitmap = null;
     }
 
-    private void addMaskView() {
-        maskView = new MaskView(getContext());
-        FrameLayout.LayoutParams lp = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        maskView.setLayoutParams(lp);
-        addView(maskView);
+    public void setMaskView(MaskViewImpl maskView) {
+        if (this.maskView == maskView) {
+            return;
+        }
+        if (this.maskView != null) {
+            removeView(this.maskView.getMaskView());
+        }
+        this.maskView = maskView;
+        addView(maskView.getMaskView());
     }
 
     public RectF getMaskRect() {
@@ -140,6 +154,38 @@ public class SmartCameraView extends CameraView {
             return null;
         }
         return maskView.getMaskRect();
+    }
+
+    public void cropImage(final byte[] data, final CropCallback cropCallback) {
+        new Thread() {
+            @Override
+            public void run() {
+                super.run();
+                Rect revisedMaskRect = getAdjustPictureMaskRect();
+                Bitmap bitmapSrc = BitmapFactory.decodeByteArray(data, 0, data.length);
+                if (revisedMaskRect != null) {
+                    final Bitmap bitmap = Bitmap.createBitmap(bitmapSrc, revisedMaskRect.left, revisedMaskRect.top, revisedMaskRect.width(), revisedMaskRect.height());
+                    bitmapSrc.recycle();
+                    post(new Runnable() {
+                        @Override
+                        public void run() {
+                            cropCallback.onCropped(bitmap);
+                        }
+                    });
+                    return;
+                }
+                post(new Runnable() {
+                    @Override
+                    public void run() {
+                        cropCallback.onCropped(null);
+                    }
+                });
+            }
+        }.start();
+    }
+
+    public interface CropCallback {
+        void onCropped(Bitmap cropBitmap);
     }
 
     public interface OnScanResultListener {
@@ -161,7 +207,7 @@ public class SmartCameraView extends CameraView {
                     int previewRotation = getPreviewRotation();
                     Size size = getPreviewSize();
                     Rect revisedMaskRect = getAdjustPreviewMaskRect();
-                    float scaleRatio = 0.5f;
+                    float scaleRatio = 0.3f;
                     if (revisedMaskRect != null && size != null) {
                         if (preview && previewBitmap == null) {
                             previewBitmap = Bitmap.createBitmap(Math.round(scaleRatio * revisedMaskRect.width()),

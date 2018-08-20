@@ -114,6 +114,10 @@ public class MainActivity extends AppCompatActivity {
                 mCameraView.startScan();
             }
         });
+        Window window = alertDialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawableResource(R.color.colorTrans);
+        }
         alertDialog.show();
     }
 

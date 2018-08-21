@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         imageView.setVisibility(View.VISIBLE);
-        mCameraView.setPreview(true);
+        mCameraView.getSmartScanner().setPreview(true);
         mCameraView.setOnScanResultListener(new SmartCameraView.OnScanResultListener() {
             @Override
             public boolean onScanResult(SmartCameraView smartCameraView, int result) {

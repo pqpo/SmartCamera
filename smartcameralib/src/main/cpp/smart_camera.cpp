@@ -11,6 +11,19 @@
 
 using namespace cv;
 
+static const char* const kClassScanner = "me/pqpo/smartcameralib/SmartScanner";
+
+static bool DEBUG = false;
+
+static struct {
+    int firstGaussianBlurRadius = 3;
+    int secondGaussianBlurRadius = 3;
+    int cannyThreshold1 = 5;
+    int cannyThreshold2 = 80;
+    int thresholdThresh = 0;
+    int thresholdMaxVal = 255;
+} gScannerParams;
+
 void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation, int maskX, int maskY, int maskWidth, int maskHeight, float scaleRatio) {
     Mat mYuv(height+height/2, width, CV_8UC1, (uchar *)yuvData);
     Mat imgMat(height, width, CV_8UC1);
@@ -34,19 +47,20 @@ void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation,
     Mat croppedMat = imgMat(rect);
 
     Mat resizeMat;
-    resize(croppedMat, resizeMat, Size(cvRound(maskWidth*scaleRatio), cvRound(maskHeight*scaleRatio)));
+    resize(croppedMat, resizeMat, Size(static_cast<int>(maskWidth * scaleRatio),
+                                       static_cast<int>(maskHeight * scaleRatio)));
 
     Mat blurMat;
-    GaussianBlur(resizeMat, blurMat, Size(3,3), 0);
+    GaussianBlur(resizeMat, blurMat, Size(gScannerParams.firstGaussianBlurRadius,gScannerParams.firstGaussianBlurRadius), 0);
     Mat grayMat;
     cvtColor(blurMat, grayMat, CV_RGB2GRAY);
     Mat blurMat2;
-    GaussianBlur(grayMat, blurMat2, Size(3,3), 0);
+    GaussianBlur(grayMat, blurMat2, Size(gScannerParams.secondGaussianBlurRadius, gScannerParams.secondGaussianBlurRadius), 0);
 
     Mat cannyMat;
-    Canny(blurMat2, cannyMat, 5, 80);
+    Canny(blurMat2, cannyMat, gScannerParams.cannyThreshold1, gScannerParams.cannyThreshold2);
     Mat thresholdMat;
-    threshold(cannyMat, thresholdMat, 0, 255, CV_THRESH_OTSU);
+    threshold(cannyMat, thresholdMat, gScannerParams.thresholdThresh, gScannerParams.thresholdMaxVal, CV_THRESH_OTSU);
     outMat = thresholdMat;
 }
 
@@ -75,9 +89,11 @@ Java_me_pqpo_smartcameralib_SmartScanner_previewScan(JNIEnv *env, jclass type, j
     if(outDP.size() == 4) {
         double maskArea = outMat.rows * outMat.cols;
         double realArea = contourArea(outDP);
-//        std::ostringstream areaLog;
-//        areaLog << "maskArea:" << maskArea << " realArea: " << realArea << std::endl;
-//        __android_log_write(ANDROID_LOG_DEBUG, "smart_camera.cpp", areaLog.str().c_str());
+        if (DEBUG) {
+            std::ostringstream areaLog;
+            areaLog << "previewScan: " << "maskArea=" << maskArea << "; realArea= " << realArea << "; checkRatio= " << ratio << std::endl;
+            __android_log_write(ANDROID_LOG_DEBUG, "smart_camera.cpp", areaLog.str().c_str());
+        }
         if (maskArea != 0 && (realArea / maskArea) >= checkRatio)  {
             return 1;
         }
@@ -85,18 +101,24 @@ Java_me_pqpo_smartcameralib_SmartScanner_previewScan(JNIEnv *env, jclass type, j
     return 0;
 }
 
-//extern "C"
-//JNIEXPORT void JNICALL
-//Java_me_pqpo_smartcameralib_SmartScanner_cropMask(JNIEnv *env, jclass type, jbyteArray data_, jint dataSize,
-//                                                  jint width, jint height, jint maskX, jint maskY,
-//                                                  jint maskW, jint maskH, jobject outBitmap) {
-//    jbyte *data = env->GetByteArrayElements(data_, NULL);
-//
-//    vector<uchar> jpgbytes(data, data+dataSize);
-//    Mat image = imdecode(jpgbytes, CV_LOAD_IMAGE_UNCHANGED);
-//    cvtColor(image, image, CV_BGR2RGB);
-//
-//    Rect rect(maskX, maskY, maskW, maskH);
-//    Mat croppedMat = image(rect);
-//    mat_to_bitmap(env, croppedMat, outBitmap);
-//}
+static void initScannerParams(JNIEnv *env) {
+    jclass classDocScanner = env->FindClass(kClassScanner);
+    DEBUG = env->GetStaticBooleanField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "DEBUG", "Z"));
+    gScannerParams.firstGaussianBlurRadius = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "firstGaussianBlurRadius", "I"));
+    gScannerParams.secondGaussianBlurRadius = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "secondGaussianBlurRadius", "I"));
+    gScannerParams.cannyThreshold1 = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "cannyThreshold1", "I"));
+    gScannerParams.cannyThreshold2 = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "cannyThreshold2", "I"));
+//    gScannerParams.thresholdThresh = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "thresholdThresh", "I"));
+//    gScannerParams.thresholdMaxVal = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "thresholdMaxVal", "I"));
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+JNI_OnLoad(JavaVM* vm, void* reserved) {
+    JNIEnv *env = NULL;
+    if (vm->GetEnv((void **) &env, JNI_VERSION_1_4) != JNI_OK) {
+        return JNI_FALSE;
+    }
+    initScannerParams(env);
+    return JNI_VERSION_1_4;
+}

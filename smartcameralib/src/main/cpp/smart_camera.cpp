@@ -25,7 +25,8 @@ static struct {
     float checkMinLengthRatio = 0.5;
     int houghLinesThreshold = 110;
     int houghLinesMinLineLength = 80;
-    double houghLinesMaxLineGap = 10;
+    int houghLinesMaxLineGap = 10;
+    float detectionRatio = 0.1;
 } gScannerParams;
 
 void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation, int maskX, int maskY, int maskWidth, int maskHeight, float scaleRatio) {
@@ -81,7 +82,7 @@ JNIEXPORT jint JNICALL
 Java_me_pqpo_smartcameralib_SmartScanner_previewScan(JNIEnv *env, jclass type, jbyteArray yuvData_,
                                                   jint width, jint height, jint rotation, jint x,
                                                   jint y, jint maskWidth, jint maskHeight,
-                                                  jobject previewBitmap, jfloat ratio, jfloat checkRatio) {
+                                                  jobject previewBitmap, jfloat ratio) {
     jbyte *yuvData = env->GetByteArrayElements(yuvData_, NULL);
     Mat outMat;
     processMat(yuvData, outMat, width, height, rotation, x, y, maskWidth, maskHeight, ratio);
@@ -89,23 +90,28 @@ Java_me_pqpo_smartcameralib_SmartScanner_previewScan(JNIEnv *env, jclass type, j
 
     int matH = outMat.rows;
     int matW = outMat.cols;
-    int threshold = cvRound(min(checkRatio * matH, checkRatio * matW));
-    Rect rect(0, 0, threshold, matH);
+    int thresholdW = cvRound( gScannerParams.detectionRatio * matW);
+    int thresholdH = cvRound( gScannerParams.detectionRatio * matH);
+    //1. crop left
+    Rect rect(0, 0, thresholdW, matH);
     Mat croppedMatL = outMat(rect);
+    //2. crop top
     rect.x = 0;
     rect.y = 0;
     rect.width = matW;
-    rect.height = threshold;
+    rect.height = thresholdH;
     Mat croppedMatT = outMat(rect);
-    rect.x = matW - threshold;
+    //3. crop right
+    rect.x = matW - thresholdW;
     rect.y = 0;
-    rect.width = threshold;
+    rect.width = thresholdW;
     rect.height = matH;
     Mat croppedMatR = outMat(rect);
+    //4. crop bottom
     rect.x = 0;
-    rect.y = matH - threshold;
+    rect.y = matH - thresholdH;
     rect.width = matW;
-    rect.height = threshold;
+    rect.height = thresholdH;
     Mat croppedMatB = outMat(rect);
 
     vector<Vec4i> linesLeft = houghLines(croppedMatL);
@@ -116,8 +122,8 @@ Java_me_pqpo_smartcameralib_SmartScanner_previewScan(JNIEnv *env, jclass type, j
     if (previewBitmap != NULL) {
         drawLines(outMat, linesLeft, 0, 0);
         drawLines(outMat, linesTop, 0, 0);
-        drawLines(outMat, linesRight, matW - threshold, 0);
-        drawLines(outMat, linesBottom, 0, matH - threshold);
+        drawLines(outMat, linesRight, matW - thresholdW, 0);
+        drawLines(outMat, linesBottom, 0, matH - thresholdH);
         mat_to_bitmap(env, outMat, previewBitmap);
     }
 
@@ -140,7 +146,14 @@ static void initScannerParams(JNIEnv *env) {
     gScannerParams.checkMinLengthRatio = env->GetStaticFloatField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "checkMinLengthRatio", "F"));
     gScannerParams.houghLinesThreshold = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "houghLinesThreshold", "I"));
     gScannerParams.houghLinesMinLineLength = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "houghLinesMinLineLength", "I"));
-    gScannerParams.houghLinesMaxLineGap = env->GetStaticDoubleField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "houghLinesMaxLineGap", "D"));
+    gScannerParams.houghLinesMaxLineGap = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "houghLinesMaxLineGap", "I"));
+    gScannerParams.detectionRatio = env->GetStaticFloatField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "detectionRatio", "F"));
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_me_pqpo_smartcameralib_SmartScanner_reloadParams(JNIEnv *env, jclass type) {
+    initScannerParams(env);
 }
 
 extern "C"

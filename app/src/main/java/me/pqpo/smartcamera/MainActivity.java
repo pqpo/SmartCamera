@@ -16,6 +16,7 @@ import com.google.android.cameraview.CameraView;
 
 import me.pqpo.smartcameralib.MaskView;
 import me.pqpo.smartcameralib.SmartCameraView;
+import me.pqpo.smartcameralib.SmartScanner;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -37,7 +38,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mCameraView = findViewById(R.id.sample_text);
-        initMaskView();
         imageView = findViewById(R.id.image);
 
         imageView.setOnClickListener(new View.OnClickListener() {
@@ -48,7 +48,27 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        imageView.setVisibility(View.VISIBLE);
+        initMaskView();
+        initCameraView();
+        initScannerParams();
+    }
+
+    private void initScannerParams() {
+        SmartScanner.detectionRatio = 0.1f;
+        SmartScanner.checkMinLengthRatio = 0.8f;
+        SmartScanner.cannyThreshold1 = 20;
+        SmartScanner.cannyThreshold2 = 50;
+        SmartScanner.houghLinesThreshold = 130;
+        SmartScanner.houghLinesMinLineLength = 80;
+        SmartScanner.houghLinesMaxLineGap = 10;
+        SmartScanner.firstGaussianBlurRadius = 3;
+        SmartScanner.secondGaussianBlurRadius = 3;
+        SmartScanner.maxSize = 300;
+        // don't forget reload params
+        SmartScanner.reloadParams();
+    }
+
+    private void initCameraView() {
         mCameraView.getSmartScanner().setPreview(true);
         mCameraView.setOnScanResultListener(new SmartCameraView.OnScanResultListener() {
             @Override

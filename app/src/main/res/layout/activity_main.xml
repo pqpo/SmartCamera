@@ -19,7 +19,6 @@
         android:layout_height="180dp"
         android:scaleType="fitCenter"
         android:layout_alignParentBottom="true"
-        android:visibility="gone"
         android:src="@mipmap/ic_launcher" />
 
 </RelativeLayout>

@@ -8,10 +8,8 @@
 #include <opencv2/opencv.hpp>
 using namespace cv;
 
-bool checkLines(vector<Vec4i> &lines, int checkMinLength)
-void drawLines(Mat &src, vector<Vec2f> &lines);
-void drawLines(Mat &src, vector<Vec4i> &lines, int offsetX, int offsetY)
-vector<Point> findMaxContours(Mat &src);
+bool checkLines(vector<Vec4i> &lines, int checkMinLength);
+void drawLines(Mat &src, vector<Vec4i> &lines, int offsetX, int offsetY);
 void matRotateClockWise90(Mat &src);
 void matRotateClockWise180(Mat &src);
 void matRotateClockWise270(Mat &src);

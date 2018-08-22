@@ -63,8 +63,10 @@ void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation,
 
     Mat cannyMat;
     Canny(blurMat2, cannyMat, gScannerParams.cannyThreshold1, gScannerParams.cannyThreshold2);
+    Mat dilateMat;
+    dilate(cannyMat, dilateMat, getStructuringElement(MORPH_RECT, Size(2, 2)));
     Mat thresholdMat;
-    threshold(cannyMat, thresholdMat, gScannerParams.thresholdThresh, gScannerParams.thresholdMaxVal, CV_THRESH_OTSU);
+    threshold(dilateMat, thresholdMat, gScannerParams.thresholdThresh, gScannerParams.thresholdMaxVal, CV_THRESH_OTSU);
     outMat = thresholdMat;
 }
 

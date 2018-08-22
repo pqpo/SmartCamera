@@ -22,6 +22,10 @@ static struct {
     int cannyThreshold2 = 80;
     int thresholdThresh = 0;
     int thresholdMaxVal = 255;
+    float checkMinLengthRatio = 0.5;
+    int houghLinesThreshold = 110;
+    int houghLinesMinLineLength = 80;
+    double houghLinesMaxLineGap = 10;
 } gScannerParams;
 
 void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation, int maskX, int maskY, int maskWidth, int maskHeight, float scaleRatio) {
@@ -64,6 +68,12 @@ void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation,
     outMat = thresholdMat;
 }
 
+vector<Vec4i> houghLines(Mat &scr) {
+    vector<Vec4i>lines;
+    HoughLinesP(scr, lines, 1, CV_PI / 180, gScannerParams.houghLinesThreshold, gScannerParams.houghLinesMinLineLength, gScannerParams.houghLinesMaxLineGap);
+    return lines;
+}
+
 extern "C"
 JNIEXPORT jint JNICALL
 Java_me_pqpo_smartcameralib_SmartScanner_previewScan(JNIEnv *env, jclass type, jbyteArray yuvData_,
@@ -75,28 +85,45 @@ Java_me_pqpo_smartcameralib_SmartScanner_previewScan(JNIEnv *env, jclass type, j
     processMat(yuvData, outMat, width, height, rotation, x, y, maskWidth, maskHeight, ratio);
     env->ReleaseByteArrayElements(yuvData_, yuvData, 0);
 
-    vector<Point> outDP = findMaxContours(outMat);
+    int matH = outMat.rows;
+    int matW = outMat.cols;
+    int threshold = cvRound(min(checkRatio * matH, checkRatio * matW));
+    Rect rect(0, 0, threshold, matH);
+    Mat croppedMatL = outMat(rect);
+    rect.x = 0;
+    rect.y = 0;
+    rect.width = matW;
+    rect.height = threshold;
+    Mat croppedMatT = outMat(rect);
+    rect.x = matW - threshold;
+    rect.y = 0;
+    rect.width = threshold;
+    rect.height = matH;
+    Mat croppedMatR = outMat(rect);
+    rect.x = 0;
+    rect.y = matH - threshold;
+    rect.width = matW;
+    rect.height = threshold;
+    Mat croppedMatB = outMat(rect);
+
+    vector<Vec4i> linesLeft = houghLines(croppedMatL);
+    vector<Vec4i> linesTop = houghLines(croppedMatT);
+    vector<Vec4i> linesRight = houghLines(croppedMatR);
+    vector<Vec4i> linesBottom = houghLines(croppedMatB);
+
     if (previewBitmap != NULL) {
-        if(outDP.size() == 4) {
-            line(outMat, outDP[0], outDP[1], cv::Scalar(255), 1);
-            line(outMat, outDP[1], outDP[2], cv::Scalar(255), 1);
-            line(outMat, outDP[2], outDP[3], cv::Scalar(255), 1);
-            line(outMat, outDP[3], outDP[0], cv::Scalar(255), 1);
-        }
+        drawLines(outMat, linesLeft, 0, 0);
+        drawLines(outMat, linesTop, 0, 0);
+        drawLines(outMat, linesRight, matW - threshold, 0);
+        drawLines(outMat, linesBottom, 0, matH - threshold);
         mat_to_bitmap(env, outMat, previewBitmap);
     }
 
-    if(outDP.size() == 4) {
-        double maskArea = outMat.rows * outMat.cols;
-        double realArea = contourArea(outDP);
-        if (DEBUG) {
-            std::ostringstream areaLog;
-            areaLog << "previewScan: " << "maskArea=" << maskArea << "; realArea= " << realArea << "; checkRatio= " << ratio << std::endl;
-            __android_log_write(ANDROID_LOG_DEBUG, "smart_camera.cpp", areaLog.str().c_str());
-        }
-        if (maskArea != 0 && (realArea / maskArea) >= checkRatio)  {
-            return 1;
-        }
+    int checkMinLengthH = static_cast<int>(matH * gScannerParams.checkMinLengthRatio);
+    int checkMinLengthW = static_cast<int>(matW * gScannerParams.checkMinLengthRatio);
+    if (checkLines(linesLeft, checkMinLengthH) && checkLines(linesRight, checkMinLengthH)
+        && checkLines(linesTop, checkMinLengthW) && checkLines(linesBottom, checkMinLengthW)) {
+        return 1;
     }
     return 0;
 }
@@ -108,8 +135,10 @@ static void initScannerParams(JNIEnv *env) {
     gScannerParams.secondGaussianBlurRadius = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "secondGaussianBlurRadius", "I"));
     gScannerParams.cannyThreshold1 = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "cannyThreshold1", "I"));
     gScannerParams.cannyThreshold2 = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "cannyThreshold2", "I"));
-//    gScannerParams.thresholdThresh = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "thresholdThresh", "I"));
-//    gScannerParams.thresholdMaxVal = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "thresholdMaxVal", "I"));
+    gScannerParams.checkMinLengthRatio = env->GetStaticFloatField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "checkMinLengthRatio", "F"));
+    gScannerParams.houghLinesThreshold = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "houghLinesThreshold", "I"));
+    gScannerParams.houghLinesMinLineLength = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "houghLinesMinLineLength", "I"));
+    gScannerParams.houghLinesMaxLineGap = env->GetStaticDoubleField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "houghLinesMaxLineGap", "D"));
 }
 
 extern "C"

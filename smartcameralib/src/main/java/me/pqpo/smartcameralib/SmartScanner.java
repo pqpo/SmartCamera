@@ -9,16 +9,23 @@ import android.graphics.Rect;
 public class SmartScanner {
 
     public static boolean DEBUG = false;
+
+    public static float checkMinLengthRatio = 0.5f;
+
     // 高斯模糊半径，消除噪点，必须为正奇数。
     // 第一次为原图模糊，第二次为灰度图模糊
     public static int firstGaussianBlurRadius = 3;
     public static int secondGaussianBlurRadius = 3;
+    public static int cannyThreshold1 = 25;
+    public static int cannyThreshold2 = 50;
 
-    public static int cannyThreshold1 = 1;
-    public static int cannyThreshold2 = 80;
+    public static int houghLinesThreshold = 110;
+    public static int houghLinesMinLineLength = 80;
+    public static double houghLinesMaxLineGap = 10.0;
+
 
     private int maxSize = 600;
-    private float checkRatio = 0.80f;
+    private float checkRatio = 0.15f;
     private boolean preview = false;
 
     protected Bitmap mPreviewBitmap;

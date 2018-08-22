@@ -38,11 +38,12 @@ void drawLines(Mat &src, vector<Vec2f> &lines) {
     }
 }
 
-vector<Vec2f> checkLines(Mat &scr, int houghThreshold) {
-    vector<Vec2f>lines;//矢量结构lines用于存放得到的线段矢量集合
-    HoughLines(scr, lines, 2, CV_PI / 180, houghThreshold);
-    int lineSize = lines.size();
-    return lines;
+void drawLines(Mat &src, vector<Vec4i> &lines, int offsetX, int offsetY) {
+    for( size_t i = 0; i < lines.size(); i++ )
+    {
+        Vec4i l = lines[i];
+        line(src, Point(l[0] + offsetX, l[1] + offsetY), Point(l[2] + offsetX, l[3] + offsetY), Scalar(255), 4, CV_AA);
+    }
 }
 
 vector<Point> findMaxContours(Mat &src) {
@@ -67,6 +68,26 @@ vector<Point> findMaxContours(Mat &src) {
         approxPolyDP(Mat(maxAreaPoints), outDP, 0.02*arc, true);
     }
     return outDP;
+}
+
+bool checkLines(vector<Vec4i> &lines, int checkMinLength) {
+    for( size_t i = 0; i < lines.size(); i++ ) {
+        Vec4i l = lines[i];
+        int x1 = l[0];
+        int y1 = l[1];
+        int x2 = l[2];
+        int y2 = l[3];
+
+        float distance;
+        distance = powf((x1 - x2),2) + powf((y1 - y2),2);
+        distance = sqrtf(distance);
+
+        if (distance >= checkMinLength) {
+            return true;
+        }
+
+    }
+    return false;
 }
 
 //顺时针90

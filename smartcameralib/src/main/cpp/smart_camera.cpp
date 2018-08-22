@@ -15,6 +15,10 @@ static const char* const kClassScanner = "me/pqpo/smartcameralib/SmartScanner";
 
 static bool DEBUG = false;
 
+static const char* const LOG_TAG = "smart_camera_lib";
+
+#define LOG_D(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+
 static struct {
     int firstGaussianBlurRadius = 3;
     int secondGaussianBlurRadius = 3;
@@ -127,10 +131,23 @@ Java_me_pqpo_smartcameralib_SmartScanner_previewScan(JNIEnv *env, jclass type, j
         mat_to_bitmap(env, outMat, previewBitmap);
     }
 
+    if(DEBUG) {
+        std::ostringstream logStr;
+        logStr << "Number of lines in the area: [ " << linesLeft.size()
+               << " , " << linesTop.size()
+               << " , " << linesRight.size()
+               << " , " << linesBottom.size() << " ]" << std::endl;
+        string log = logStr.str();
+        LOG_D("%s", log.c_str());
+    }
+
     int checkMinLengthH = static_cast<int>(matH * gScannerParams.checkMinLengthRatio);
     int checkMinLengthW = static_cast<int>(matW * gScannerParams.checkMinLengthRatio);
     if (checkLines(linesLeft, checkMinLengthH) && checkLines(linesRight, checkMinLengthH)
         && checkLines(linesTop, checkMinLengthW) && checkLines(linesBottom, checkMinLengthW)) {
+        if (DEBUG) {
+            LOG_D("Detect passed!");
+        }
         return 1;
     }
     return 0;
@@ -148,6 +165,9 @@ static void initScannerParams(JNIEnv *env) {
     gScannerParams.houghLinesMinLineLength = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "houghLinesMinLineLength", "I"));
     gScannerParams.houghLinesMaxLineGap = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "houghLinesMaxLineGap", "I"));
     gScannerParams.detectionRatio = env->GetStaticFloatField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "detectionRatio", "F"));
+    if (DEBUG) {
+        LOG_D("load params done!");
+    }
 }
 
 extern "C"

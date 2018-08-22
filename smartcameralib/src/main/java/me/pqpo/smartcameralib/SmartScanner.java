@@ -8,7 +8,9 @@ import android.graphics.Rect;
  */
 public class SmartScanner {
 
-    /*** 以下参数会在 native 代码中读取 */
+    private static final String TAG = "SmartScanner";
+
+    /*** 以下配置参数会在 native 代码中读取 */
 
     public static boolean DEBUG = false;
 
@@ -56,17 +58,24 @@ public class SmartScanner {
     public static float detectionRatio = 0.1f;
     /**
      * 为了提高性能，检测的图片会缩小到该尺寸之内
-     * 太小的话会影响检测效果
+     * 设置太小的话会影响检测效果
      */
     public static float maxSize = 300;
 
-    // 以上参数会在 native 代码中读取
-
+    /** 预览 */
     private boolean preview = false;
-    protected Bitmap mPreviewBitmap;
+    private Bitmap mPreviewBitmap;
 
+    /**
+     * 是否需要预览处理过程中的图片
+     * 用于调用参数，开启后通过 getPreviewBitmap() 获取实时处理的图片
+     * 出于性能考虑，其他情况下请关闭预览
+     */
     public SmartScanner setPreview(boolean preview) {
         this.preview = preview;
+        if (!preview) {
+            mPreviewBitmap = null;
+        }
         return this;
     }
 

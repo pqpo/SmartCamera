@@ -22,7 +22,9 @@ import me.pqpo.smartcameralib.SmartScanner;
 public class MainActivity extends AppCompatActivity {
 
     private SmartCameraView mCameraView;
-    private ImageView imageView;
+    private ImageView ivPreview;
+    private AlertDialog alertDialog;
+    private ImageView ivDialog;
 
     protected void onCreate(Bundle savedInstanceState) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -38,9 +40,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mCameraView = findViewById(R.id.sample_text);
-        imageView = findViewById(R.id.image);
+        ivPreview = findViewById(R.id.image);
 
-        imageView.setOnClickListener(new View.OnClickListener() {
+        ivPreview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mCameraView.takePicture();
@@ -54,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initScannerParams() {
+        SmartScanner.DEBUG = true;
         SmartScanner.detectionRatio = 0.1f;
         SmartScanner.checkMinLengthRatio = 0.8f;
         SmartScanner.cannyThreshold1 = 20;
@@ -75,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
             public boolean onScanResult(SmartCameraView smartCameraView, int result) {
                 Bitmap previewBitmap = smartCameraView.getPreviewBitmap();
                 if (previewBitmap != null) {
-                    imageView.setImageBitmap(previewBitmap);
+                    ivPreview.setImageBitmap(previewBitmap);
                 }
                 return false;
             }
@@ -125,30 +128,37 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showPicture(Bitmap bitmap) {
-        ImageView imageView = new ImageView(this);
-        imageView.setImageBitmap(bitmap);
-        AlertDialog alertDialog = new AlertDialog.Builder(this).setView(imageView).create();
-        alertDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialog) {
-                mCameraView.startScan();
+        if (alertDialog == null) {
+            ivDialog = new ImageView(this);
+            alertDialog = new AlertDialog.Builder(this).setView(ivDialog).create();
+            alertDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    mCameraView.startScan();
+                }
+            });
+            Window window = alertDialog.getWindow();
+            if (window != null) {
+                window.setBackgroundDrawableResource(R.color.colorTrans);
             }
-        });
-        Window window = alertDialog.getWindow();
-        if (window != null) {
-            window.setBackgroundDrawableResource(R.color.colorTrans);
         }
+        ivDialog.setImageBitmap(bitmap);
         alertDialog.show();
     }
 
     protected void onResume() {
         super.onResume();
         mCameraView.start();
+        mCameraView.startScan();
     }
 
 
     protected void onPause() {
         mCameraView.stop();
         super.onPause();
+        if (alertDialog != null) {
+            alertDialog.dismiss();
+        }
+        mCameraView.stopScan();
     }
 }

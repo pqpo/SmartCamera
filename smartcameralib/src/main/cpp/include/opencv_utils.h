@@ -8,7 +8,6 @@
 #include <opencv2/opencv.hpp>
 using namespace cv;
 
-bool checkLines(vector<Vec4i> &lines, int checkMinLength);
 void drawLines(Mat &src, vector<Vec4i> &lines, int offsetX, int offsetY);
 void matRotateClockWise90(Mat &src);
 void matRotateClockWise180(Mat &src);

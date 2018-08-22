@@ -31,6 +31,7 @@ static struct {
     int houghLinesMinLineLength = 80;
     int houghLinesMaxLineGap = 10;
     float detectionRatio = 0.1;
+    float angleThreshold = 5;
 } gScannerParams;
 
 void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation, int maskX, int maskY, int maskWidth, int maskHeight, float scaleRatio) {
@@ -79,6 +80,47 @@ vector<Vec4i> houghLines(Mat &scr) {
     vector<Vec4i>lines;
     HoughLinesP(scr, lines, 1, CV_PI / 180, gScannerParams.houghLinesThreshold, gScannerParams.houghLinesMinLineLength, gScannerParams.houghLinesMaxLineGap);
     return lines;
+}
+
+bool checkLines(vector<Vec4i> &lines, int checkMinLength, bool vertical) {
+    for( size_t i = 0; i < lines.size(); i++ ) {
+        Vec4i l = lines[i];
+        int x1 = l[0];
+        int y1 = l[1];
+        int x2 = l[2];
+        int y2 = l[3];
+
+        float distance;
+        distance = powf((x1 - x2),2) + powf((y1 - y2),2);
+        distance = sqrtf(distance);
+
+        if (distance < checkMinLength) {
+            continue;
+        }
+        if (x2 == x1) {
+            return true;
+        }
+
+        float angle = cvFastArctan(fast_abs(y2 - y1), fast_abs(x2 - x1));
+        if (DEBUG) {
+            std::ostringstream logStr;
+            logStr << "Detection angle: [ vertical = " << vertical
+                   << ", angle = " << angle << ", threshold = " << gScannerParams.angleThreshold << " ]" << std::endl;
+            string log = logStr.str();
+            LOG_D("%s", log.c_str());
+        }
+        if (vertical) {
+            if(fast_abs(90 - angle) < gScannerParams.angleThreshold) {
+                return true;
+            }
+        }
+        if (!vertical) {
+            if(fast_abs(angle) < gScannerParams.angleThreshold) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 extern "C"
@@ -143,8 +185,8 @@ Java_me_pqpo_smartcameralib_SmartScanner_previewScan(JNIEnv *env, jclass type, j
 
     int checkMinLengthH = static_cast<int>(matH * gScannerParams.checkMinLengthRatio);
     int checkMinLengthW = static_cast<int>(matW * gScannerParams.checkMinLengthRatio);
-    if (checkLines(linesLeft, checkMinLengthH) && checkLines(linesRight, checkMinLengthH)
-        && checkLines(linesTop, checkMinLengthW) && checkLines(linesBottom, checkMinLengthW)) {
+    if (checkLines(linesLeft, checkMinLengthH, true) && checkLines(linesRight, checkMinLengthH, true)
+        && checkLines(linesTop, checkMinLengthW, false) && checkLines(linesBottom, checkMinLengthW, false)) {
         if (DEBUG) {
             LOG_D("Detect passed!");
         }
@@ -165,6 +207,7 @@ static void initScannerParams(JNIEnv *env) {
     gScannerParams.houghLinesMinLineLength = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "houghLinesMinLineLength", "I"));
     gScannerParams.houghLinesMaxLineGap = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "houghLinesMaxLineGap", "I"));
     gScannerParams.detectionRatio = env->GetStaticFloatField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "detectionRatio", "F"));
+    gScannerParams.angleThreshold = env->GetStaticFloatField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "angleThreshold", "F"));
     if (DEBUG) {
         LOG_D("load params done!");
     }

@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         SmartScanner.firstGaussianBlurRadius = 3;
         SmartScanner.secondGaussianBlurRadius = 3;
         SmartScanner.maxSize = 300;
+        SmartScanner.angleThreshold = 5;
         // don't forget reload params
         SmartScanner.reloadParams();
     }

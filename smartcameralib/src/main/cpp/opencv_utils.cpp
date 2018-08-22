@@ -69,26 +69,6 @@ vector<Point> findMaxContours(Mat &src) {
     return outDP;
 }
 
-bool checkLines(vector<Vec4i> &lines, int checkMinLength) {
-    for( size_t i = 0; i < lines.size(); i++ ) {
-        Vec4i l = lines[i];
-        int x1 = l[0];
-        int y1 = l[1];
-        int x2 = l[2];
-        int y2 = l[3];
-
-        float distance;
-        distance = powf((x1 - x2),2) + powf((y1 - y2),2);
-        distance = sqrtf(distance);
-
-        if (distance >= checkMinLength) {
-            return true;
-        }
-
-    }
-    return false;
-}
-
 //顺时针90
 void matRotateClockWise90(Mat &src)
 {

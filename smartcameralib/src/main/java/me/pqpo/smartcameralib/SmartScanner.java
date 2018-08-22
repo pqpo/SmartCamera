@@ -62,6 +62,23 @@ public class SmartScanner {
      */
     public static float maxSize = 300;
 
+    /**
+     * 检测角度阈值
+     * 例如:
+     *
+     * 实际检测时会将夹角收敛到第一象限
+     *
+     * 1. 检测出来的左边框线段与 x 轴夹角为 angleLeft
+     *  if （abs(90 - angleLeft) < angleThreshold） {
+     *      该线段符合检测条件,几乎垂直
+     *  }
+     * 2. 检测出来的上边框线段与 x 轴夹角为 angleTop
+     *  if （abs(angleTop) < angleThreshold） {
+     *      该线段符合检测条件,几乎水平
+     *  }
+     */
+    public static float angleThreshold = 5;
+
     /** 预览 */
     private boolean preview = false;
     private Bitmap mPreviewBitmap;

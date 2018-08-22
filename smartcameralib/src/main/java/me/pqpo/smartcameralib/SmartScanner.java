@@ -8,26 +8,62 @@ import android.graphics.Rect;
  */
 public class SmartScanner {
 
+    /*** 以下参数会在 native 代码中读取 */
+
     public static boolean DEBUG = false;
 
+    /**
+     * 线段最小长度检测比例
+     * 例如：
+     * 靠近上边框检测出一条线段长度为： checkLength
+     * 上边框总宽度为：width
+     * 那么：
+     * if (checkLength > width * checkMinLengthRatio ) {
+     *     该线段符合检测条件，认为该线段为被检测物体上边框
+     * }
+     */
     public static float checkMinLengthRatio = 0.8f;
 
-    // 高斯模糊半径，消除噪点，必须为正奇数。
-    // 第一次为原图模糊，第二次为灰度图模糊
+    /**
+     * 高斯模糊半径，用于消除噪点，必须为正奇数。
+     * 第一次为原图模糊，第二次为灰度图模糊
+     */
     public static int firstGaussianBlurRadius = 3;
     public static int secondGaussianBlurRadius = 3;
+    /**
+     * canny 算符阈值
+     * 1. 低于阈值1的像素点会被认为不是边缘；
+     * 2. 高于阈值2的像素点会被认为是边缘；
+     * 3. 在阈值1和阈值2之间的像素点,若与第2步得到的边缘像素点相邻，则被认为是边缘，否则被认为不是边缘。
+     *
+     * 大小比例推荐2到3倍
+     */
     public static int cannyThreshold1 = 20;
     public static int cannyThreshold2 = 50;
-
+    /**
+     * 霍夫变换检测线段参数
+     * 1. threshold: 最小投票数，要检测一条直线所需最少的的曲线交点，增大该值会减少检测出的线段数量。
+     * 2. minLinLength: 能组成一条直线的最少点的数量, 点数量不足的直线将被抛弃。
+     * 3. maxLineGap: 能被认为在一条直线上的点的最大距离，若出现较多断断续续的线段可以适当增大该值。
+     */
     public static int houghLinesThreshold = 130;
     public static int houghLinesMinLineLength = 80;
     public static double houghLinesMaxLineGap = 10.0;
 
+    // 以上参数会在 native 代码中读取
 
+    /**
+     * 为了提高性能，检测的图片会缩小到该尺寸之内
+     * 太小的话会影响检测效果
+     */
     private int maxSize = 300;
+    /**
+     * 检测范围比例
+     * 比例越小表示待检测物体要更靠近边框
+     */
     private float checkRatio = 0.10f;
-    private boolean preview = false;
 
+    private boolean preview = false;
     protected Bitmap mPreviewBitmap;
 
     public SmartScanner setMaxSize(int maxSize) {

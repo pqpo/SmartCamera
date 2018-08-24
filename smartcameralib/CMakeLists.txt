@@ -5,21 +5,19 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
-set(NEED_TDD (EXISTS ${PROJECT_SOURCE_DIR}/opencv/lib/${ANDROID_ABI}/libtbb.a))
-
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../jniLibs/${ANDROID_ABI})
 include_directories(opencv/include
                     src/main/cpp/include)
 
 add_library(opencv_imgproc STATIC IMPORTED)
 add_library(opencv_core STATIC IMPORTED)
-if(NEED_TDD)
+if(EXISTS ${PROJECT_SOURCE_DIR}/opencv/lib/${ANDROID_ABI}/libtbb.a)
 add_library(tbb STATIC IMPORTED)
 endif()
 
 set_target_properties(opencv_imgproc PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/opencv/lib/${ANDROID_ABI}/libopencv_imgproc.a)
 set_target_properties(opencv_core PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/opencv/lib/${ANDROID_ABI}/libopencv_core.a)
-if(NEED_TDD)
+if(EXISTS ${PROJECT_SOURCE_DIR}/opencv/lib/${ANDROID_ABI}/libtbb.a)
 set_target_properties(tbb PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/opencv/lib/${ANDROID_ABI}/libtbb.a)
 endif()
 
@@ -53,7 +51,7 @@ find_library(jnigraphics-lib
 # can link multiple libraries, such as libraries you define in this
 # build script, prebuilt third-party libraries, or system libraries.
 
-if(NEED_TDD)
+if(EXISTS ${PROJECT_SOURCE_DIR}/opencv/lib/${ANDROID_ABI}/libtbb.a)
 target_link_libraries( # Specifies the target library.
                          smart_camera
                          opencv_imgproc

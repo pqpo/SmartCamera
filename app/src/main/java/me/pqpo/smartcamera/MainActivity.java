@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mCameraView = findViewById(R.id.sample_text);
+        mCameraView = findViewById(R.id.camera_view);
         ivPreview = findViewById(R.id.image);
 
         ivPreview.setOnClickListener(new View.OnClickListener() {
@@ -51,8 +51,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         initMaskView();
-        initCameraView();
         initScannerParams();
+        initCameraView();
     }
 
     private void initScannerParams() {
@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initMaskView() {
-        final MaskView maskView = new MaskView(this);
+        final MaskView maskView = (MaskView) mCameraView.getMaskView();
         maskView.setMaskLineColor(0xff00adb5);
         maskView.setShowScanLine(true);
         maskView.setScanLineGradient(0xff00adb5, 0x0000adb5);
@@ -147,6 +147,7 @@ public class MainActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
+    @Override
     protected void onResume() {
         super.onResume();
         mCameraView.start();
@@ -154,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    @Override
     protected void onPause() {
         mCameraView.stop();
         super.onPause();

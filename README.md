@@ -1,4 +1,4 @@
-![](art/smartcamera_banner.jpg)
+![](art/smartcamera_banner.png)
 
 [English](README_EN.md)
 

@@ -1,4 +1,4 @@
-![](art/smartcamera_banner.jpg)
+![](art/smartcamera_banner.png)
 
 **SmartCamera** is an Android camera extension library，Provides a highly customizable real-time scanning module that captures and recognizes whether the object's border inside the camera matches the specified area in real time. If you like, welcome star, fork。
 

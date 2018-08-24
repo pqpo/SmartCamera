@@ -1,37 +1,36 @@
 ![](art/smartcamera_banner.jpg)
 
-[English](README_EN.md)
+**SmartCamera** is an Android camera extension library，Provides a highly customizable real-time scanning module that captures and recognizes whether the object's border inside the camera matches the specified area in real time. If you like, welcome star, fork。
 
-**SmartCamera** 是一个 Android 相机拓展库，提供了一个高度可定制的**实时扫描模块**能够实时采集并且识别相机内物体边框是否吻合指定区域。如果觉得还不错，欢迎 star，fork。
-
-语言描述起来略显生涩，具体实现的功能如下图所示，适用于身份证，名片，文档等内容的扫描、自动拍摄并且裁剪：
+The language is slightly simplistic, and the specific functions are as shown in the figure below. It is suitable for scanning, automatic shooting and cutting of ID cards, business cards, documents, etc.
 
 ![](art/smartcamera1.gif)
 
-在相机实现上，SmartCamera 以源码的方式引用了 Google 开源的 [CameraView](https://github.com/google/cameraview) ，并且稍作修改以支持 Camera.PreviewCallback 回调来获取相机预览流。  
+In the camera implementation, SmartCamera references Google's open source [CameraView](https://github.com/google/cameraview) in source code and modified to support the Camera.PreviewCallback callback to get the camera preview stream.
 
-SmartCameraView 继承于修改后的 CameraView，为其添加了一个选框蒙版视图（MaskView）和一个实时扫描模块（SmartScanner）。其中选框视图即是你看到的相机上面的那层选取框，并配备了一个由上到下的扫描效果，当然你也可以实现 MaskViewImpl 接口来自定义选框视图。
+SmartCameraView extends from the modified CameraView, adding a mask view (MaskView) and a real-time scanning module (SmartScanner). The mask view is the layer of marquee on the camera as you can see, and it is equipped with a top-down scan effect. Of course, you can also implement the MaskViewImpl interface to customize the mask view.
 
-**实时扫描模块（SmartScanner）是本库的核心功能所在，配合相机 PreviewCallback 接口回调的预览流和选框视图 MaskView 提供的选框区域 RectF，能以不错的性能实时判断出内容是否吻合选框**。
+**The real-time scanning module (SmartScanner) is the core function of the library. It can judge whether the content matches the box in real time with good performance.**。
 
-你也可以关注我的另一个库 [SmartCropper](https://github.com/pqpo/SmartCropper)： 一个简单易用的智能图片裁剪库，适用于身份证，名片，文档等照片的裁剪。
+You can also follow my other library [SmartCropper](https://github.com/pqpo/SmartCropper)： An easy-to-use smart picture cropping library for cropping of ID cards, business cards, documents, etc.
 
-## 扫描算法调优
-另外 SmartScanner 提供了丰富的配置，使用者可以自己修改扫描算法以获得更好的适配性（如下图一），为了更方便、高效地调优算法，SmartScanner 贴心地为你提供了扫描预览模式（如下图二）
+## Scanning algorithm tuning
 
-开启预览功能后，你可以通过 SmartScanner 获取每一帧处理的结果输出到 ImageView 中实时观察 native 层扫描的结果，其中白线区域即为边缘检测的结果，白线加粗区域即为识别出的边框。  
+In addition, SmartScanner provides a rich configuration, users can modify the scanning algorithm to obtain better adaptability. In order to more easily and efficiently optimize the algorithm, SmartScanner provides you with a scan preview mode.
 
-**你的目标是通过调节 SmartScanner 的各个参数使得内容边界清晰可见，识别出的边框（白色加粗线段）准确无误**。
+After the preview function is enabled, you can use SmartScanner to get the result of each frame processing and output it to the ImageView to observe the result of the native layer scan in real time. The white line area is the result of edge detection, and the white line bold area is the recognized border.
 
-注：SmartCamera 在各方面做了性能以及内存上的优化，但是出于不必要的性能资源浪费，算法参数调优结束后请关闭预览模式。
+**Your goal is to make the content boundaries clearly visible and the identified borders (white bold segments) are accurate by adjusting the various parameters of the SmartScanner.**。
+
+Note: SmartCamera performs performance and memory optimization in all aspects, but for unnecessary waste of performance resources, please close the preview mode after tuning the algorithm parameters.  
 
 |![](art/smartscannerparams.png)|![](art/smartcamera_frame1.jpg)|
 |:---:|:---:|
-|图1. 算法调节参数|图二. 实时预览模式|
+|Picture 1.|Picture 2.|
 
-## 接入
+## Import
 
-1.根目录下的 build.gradle 添加：
+1.Add it in your root build.gradle at the end of repositories:
 
 ```groovy
 allprojects {
@@ -42,7 +41,7 @@ allprojects {
 }
 ```
 
-2.添加依赖
+2.Add the dependency
 
 ```groovy
 dependencies {
@@ -50,15 +49,15 @@ dependencies {
 }
 ```
 
-注意：由于使用了 JNI， 请**避免混淆**
+Please pay attention ProGuard：
 
 ```
 -keep class me.pqpo.smartcameralib.**{*;}
 ```
 
-## 使用
+## Usage
 
-### 1. 引入相机布局，并启动相机（必要时启动预览）
+### 1. Use the camera layout and launch the camera (start preview if necessary)
 
 ```xml
 <me.pqpo.smartcameralib.SmartCameraView
@@ -86,11 +85,12 @@ protected void onPause() {
    mCameraView.stopScan();
 }
 ```
-注：若开启了预览别忘了调用相应开启、结束预览的方法。
 
-### 2. 配置蒙版选框视图（可选，若要修改默认的视图, 或要修改选框区域）
+If the preview is turned on, don't forget to call the corresponding method to open and end the preview.
 
-	配置 MaskView 各个方法的含义详见附录二
+### 2. Configure the mask view (optional, to modify the default view, or to modify the marquee area)
+
+	The meaning of configuring each method of MaskView is shown in Appendix II.
 	
 
 ```java
@@ -119,9 +119,9 @@ mCameraView.setMaskView(maskView);
         
 ```
 
-### 3. 修改扫描模块参数（可选，调优算法，同时按第四步中开启预览模式）
+### 3. Modify the scan module parameters (optional, tuning algorithm, and press the preview mode in the fourth step)
 
-	扫描模块各个参数含义详见附录一
+	See Appendix 1 for the meaning of each parameter of the scanning module.
 
 ```java
 private void initScannerParams() {
@@ -141,11 +141,11 @@ private void initScannerParams() {
      SmartScanner.reloadParams();
 }
 ```
-注： 修改参数后别忘记通知 native 层重新加载参数： SmartScanner.reloadParams();
+Don't forget to notify the native layer to reload the parameters after modifying the parameters： SmartScanner.reloadParams();
 
-### 4. 配置 SmartCameraView
+### 4. Configure SmartCameraView
 
-#### 1. 开启预览：
+#### 1. Start preview：
 
 ```java 
 mCameraView.getSmartScanner().setPreview(true);
@@ -160,19 +160,20 @@ mCameraView.setOnScanResultListener(new SmartCameraView.OnScanResultListener() {
       }
 });
 ```
-通过第一句代码开启了预览模式。  
-你可以通过 setOnScanResultListener 设置回调获得每一帧的扫描结果，**其中 ```result == 1``` 表示识别结果吻合边框**  
-若开启了预览模式，你可以在回调中使用 smartCameraView.getPreviewBitmap() 方法获取每一帧处理的结果。  
-返回值为 false 表示不拦截扫描结果，这时 SmartCameraView 内部会在 result 为 1 的情况下自动触发拍照，若你自己处理了扫描结果返回 true 即可。
+Preview mode is turned on by the first sentence code.
+You can set the callback by setOnScanResultListener to get the scan result of each frame，**result == 1 means the recognition result matches the border**
+If the preview mode is turned on, you can use the smartCameraView.getPreviewBitmap() method in the callback to get the result of each frame processing.
+A return value of false means that the scan result is not intercepted. At this time, SmartCameraView will automatically trigger the photo when the result is 1, if you have processed the scan result, it returns true.
 
-#### 2. 获取拍照结果，并且裁剪选框区域：
+
+#### 2. Get the photo results and crop the marquee area：
 
 ```java
 mCameraView.addCallback(new CameraView.Callback() {
      @Override
      public void onPictureTaken(CameraView cameraView, byte[] data) {
           super.onPictureTaken(cameraView, data);
-          // 异步裁剪图片
+          // crop the image
           mCameraView.cropImage(data, new SmartCameraView.CropCallback() {
               @Override
               public void onCropped(Bitmap cropBitmap) {
@@ -185,13 +186,9 @@ mCameraView.addCallback(new CameraView.Callback() {
 });
 ```
 
-获取拍照结果的回调是 [CameraView](https://github.com/google/cameraview) 提供的，你只需要在内部调用 SmartCameraView 提供的 cropImage 方法即可获取选框区域内的裁剪图片
+## Appendix
 
-注：其他关于 SmartCameraView 的使用方法同 [CameraView](https://github.com/google/cameraview)  ，另外更具体的使用方法请参考 app 内代码
-
-## 附录
-
-### 1. 扫描模块（SmartScanner）识别算法参数介绍：
+### 1. Scan module (SmartScanner) recognition algorithm parameter introduction：
 
 |参数名|默认值|备注|
 |:---:|:---:|:--:|
@@ -207,7 +204,7 @@ mCameraView.addCallback(new CameraView.Callback() {
 | houghLinesMinLineLength |80|能组成一条直线的最少点的数量, 点数量不足的直线将被抛弃。|
 | houghLinesMaxLineGap | 10 |能被认为在一条直线上的点的最大距离，若出现较多断断续续的线段可以适当增大该值。|
 
-### 2. 选框蒙版视图（MaskView）方法含义
+### 2. Mask view (MaskView) methods:
 |方法名|备注|
 |:---:|:---:|
 |setShowScanLine|设置是否显示扫描动画|
@@ -222,19 +219,19 @@ mCameraView.addCallback(new CameraView.Callback() {
 |setScanSpeed|设置扫描线移动速度|
 
 
-## 感谢
+## Thanks
 
 - [Google/CameraView](https://github.com/google/cameraview)
 
 ---
 
-## 关于我：
+## About Me：
 
-- 邮箱：    pqponet@gmail.com
+- Email：    pqponet@gmail.com
 - GitHub：  [pqpo](https://github.com/pqpo)
-- 博客：    [pqpo's notes](https://pqpo.me)
+- Blog：    [pqpo's notes](https://pqpo.me)
 - Twitter: [Pqponet](https://twitter.com/Pqponet)
-- 微信公众号: pqpo_me(扫下方二维码)
+- WeChat: pqpo_me
 
 <img src="art/qrcode_for_gh.jpg" width="200">
 

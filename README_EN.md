@@ -16,17 +16,19 @@ You can also follow my other library [SmartCropper](https://github.com/pqpo/Smar
 
 ## Scanning algorithm tuning
 
-In addition, SmartScanner provides a rich configuration, users can modify the scanning algorithm to obtain better adaptability. In order to more easily and efficiently optimize the algorithm, SmartScanner provides you with a scan preview mode.
+In addition, SmartScanner provides a rich configuration, users can modify the scanning algorithm to obtain better adaptability.
+
+![](art/smartscannerparams.jpg)
+
+In order to more easily and efficiently optimize the algorithm, SmartScanner provides you with a scan preview mode.
 
 After the preview function is enabled, you can use SmartScanner to get the result of each frame processing and output it to the ImageView to observe the result of the native layer scan in real time. The white line area is the result of edge detection, and the white line bold area is the recognized border.
 
+![](art/smartcamera_frame1.jpg)
+
 **Your goal is to make the content boundaries clearly visible and the identified borders (white bold segments) are accurate by adjusting the various parameters of the SmartScanner.**。
 
-Note: SmartCamera performs performance and memory optimization in all aspects, but for unnecessary waste of performance resources, please close the preview mode after tuning the algorithm parameters.  
-
-|![](art/smartscannerparams.png)|![](art/smartcamera_frame1.jpg)|
-|:---:|:---:|
-|Picture 1.|Picture 2.|
+Note: SmartCamera performs performance and memory optimization in all aspects, but for unnecessary waste of performance resources, please close the preview mode after tuning the algorithm parameters.
 
 ## Import
 
@@ -88,7 +90,31 @@ protected void onPause() {
 
 If the preview is turned on, don't forget to call the corresponding method to open and end the preview.
 
-### 2. Configure the mask view (optional, to modify the default view, or to modify the marquee area)
+### 2. Modify the scan module parameters (optional, tuning algorithm, and press the preview mode in the fourth step)
+
+	See Appendix 1 for the meaning of each parameter of the scanning module.
+
+```java
+private void initScannerParams() {
+     SmartScanner.DEBUG = true;
+     SmartScanner.detectionRatio = 0.1f;
+     SmartScanner.checkMinLengthRatio = 0.8f;
+     SmartScanner.cannyThreshold1 = 20;
+     SmartScanner.cannyThreshold2 = 50;
+     SmartScanner.houghLinesThreshold = 130;
+     SmartScanner.houghLinesMinLineLength = 80;
+     SmartScanner.houghLinesMaxLineGap = 10;
+     SmartScanner.firstGaussianBlurRadius = 3;
+     SmartScanner.secondGaussianBlurRadius = 3;
+     SmartScanner.maxSize = 300;
+     SmartScanner.angleThreshold = 5;
+     // don't forget reload params
+     SmartScanner.reloadParams();
+}
+```
+Don't forget to notify the native layer to reload the parameters after modifying the parameters： SmartScanner.reloadParams();
+
+### 3. Configure the mask view (optional, to modify the default view, or to modify the marquee area)
 
 	The meaning of configuring each method of MaskView is shown in Appendix II.
 	
@@ -118,30 +144,6 @@ mCameraView.post(new Runnable() {
 mCameraView.setMaskView(maskView);
         
 ```
-
-### 3. Modify the scan module parameters (optional, tuning algorithm, and press the preview mode in the fourth step)
-
-	See Appendix 1 for the meaning of each parameter of the scanning module.
-
-```java
-private void initScannerParams() {
-     SmartScanner.DEBUG = true;
-     SmartScanner.detectionRatio = 0.1f;
-     SmartScanner.checkMinLengthRatio = 0.8f;
-     SmartScanner.cannyThreshold1 = 20;
-     SmartScanner.cannyThreshold2 = 50;
-     SmartScanner.houghLinesThreshold = 130;
-     SmartScanner.houghLinesMinLineLength = 80;
-     SmartScanner.houghLinesMaxLineGap = 10;
-     SmartScanner.firstGaussianBlurRadius = 3;
-     SmartScanner.secondGaussianBlurRadius = 3;
-     SmartScanner.maxSize = 300;
-     SmartScanner.angleThreshold = 5;
-     // don't forget reload params
-     SmartScanner.reloadParams();
-}
-```
-Don't forget to notify the native layer to reload the parameters after modifying the parameters： SmartScanner.reloadParams();
 
 ### 4. Configure SmartCameraView
 

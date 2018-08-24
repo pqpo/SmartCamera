@@ -17,17 +17,17 @@ SmartCameraView 继承于修改后的 CameraView，为其添加了一个选框�
 你也可以关注我的另一个库 [SmartCropper](https://github.com/pqpo/SmartCropper)： 一个简单易用的智能图片裁剪库，适用于身份证，名片，文档等照片的裁剪。
 
 ## 扫描算法调优
-另外 SmartScanner 提供了丰富的配置，使用者可以自己修改扫描算法以获得更好的适配性（如下图一），为了更方便、高效地调优算法，SmartScanner 贴心地为你提供了扫描预览模式（如下图二）
+ SmartScanner 提供了丰富的算法配置，使用者可以自己修改扫描算法以获得更好的适配性，阅读附录一提供的各参数使用说明来获得更好的识别效果。
+ 
+![](art/smartscannerparams.jpg)
 
-开启预览功能后，你可以通过 SmartScanner 获取每一帧处理的结果输出到 ImageView 中实时观察 native 层扫描的结果，其中白线区域即为边缘检测的结果，白线加粗区域即为识别出的边框。  
+为了更方便、高效地调优算法，SmartScanner 贴心地为你提供了扫描预览模式，开启预览功能后，你可以通过 SmartScanner 获取每一帧处理的结果输出到 ImageView 中实时观察 native 层扫描的结果，其中白线区域即为边缘检测的结果，白线加粗区域即为识别出的边框。  
+
+![](art/smartcamera_frame1.jpg)
 
 **你的目标是通过调节 SmartScanner 的各个参数使得内容边界清晰可见，识别出的边框（白色加粗线段）准确无误**。
 
 注：SmartCamera 在各方面做了性能以及内存上的优化，但是出于不必要的性能资源浪费，算法参数调优结束后请关闭预览模式。
-
-|![](art/smartscannerparams.png)|![](art/smartcamera_frame1.jpg)|
-|:---:|:---:|
-|图1. 算法调节参数|图二. 实时预览模式|
 
 ## 接入
 
@@ -88,7 +88,31 @@ protected void onPause() {
 ```
 注：若开启了预览别忘了调用相应开启、结束预览的方法。
 
-### 2. 配置蒙版选框视图（可选，若要修改默认的视图, 或要修改选框区域）
+### 2. 修改扫描模块参数（可选，调优算法，同时按第4步中开启预览模式）
+
+	扫描模块各个参数含义详见附录一
+
+```java
+private void initScannerParams() {
+     SmartScanner.DEBUG = true;
+     SmartScanner.detectionRatio = 0.1f;
+     SmartScanner.checkMinLengthRatio = 0.8f;
+     SmartScanner.cannyThreshold1 = 20;
+     SmartScanner.cannyThreshold2 = 50;
+     SmartScanner.houghLinesThreshold = 130;
+     SmartScanner.houghLinesMinLineLength = 80;
+     SmartScanner.houghLinesMaxLineGap = 10;
+     SmartScanner.firstGaussianBlurRadius = 3;
+     SmartScanner.secondGaussianBlurRadius = 3;
+     SmartScanner.maxSize = 300;
+     SmartScanner.angleThreshold = 5;
+     // don't forget reload params
+     SmartScanner.reloadParams();
+}
+```
+注： 修改参数后别忘记通知 native 层重新加载参数： SmartScanner.reloadParams();
+
+### 3. 配置蒙版选框视图（可选，若要修改默认的视图, 或要修改选框区域）
 
 	配置 MaskView 各个方法的含义详见附录二
 	
@@ -118,30 +142,6 @@ mCameraView.post(new Runnable() {
 mCameraView.setMaskView(maskView);
         
 ```
-
-### 3. 修改扫描模块参数（可选，调优算法，同时按第四步中开启预览模式）
-
-	扫描模块各个参数含义详见附录一
-
-```java
-private void initScannerParams() {
-     SmartScanner.DEBUG = true;
-     SmartScanner.detectionRatio = 0.1f;
-     SmartScanner.checkMinLengthRatio = 0.8f;
-     SmartScanner.cannyThreshold1 = 20;
-     SmartScanner.cannyThreshold2 = 50;
-     SmartScanner.houghLinesThreshold = 130;
-     SmartScanner.houghLinesMinLineLength = 80;
-     SmartScanner.houghLinesMaxLineGap = 10;
-     SmartScanner.firstGaussianBlurRadius = 3;
-     SmartScanner.secondGaussianBlurRadius = 3;
-     SmartScanner.maxSize = 300;
-     SmartScanner.angleThreshold = 5;
-     // don't forget reload params
-     SmartScanner.reloadParams();
-}
-```
-注： 修改参数后别忘记通知 native 层重新加载参数： SmartScanner.reloadParams();
 
 ### 4. 配置 SmartCameraView
 

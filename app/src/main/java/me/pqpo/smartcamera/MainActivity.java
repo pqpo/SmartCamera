@@ -57,16 +57,37 @@ public class MainActivity extends AppCompatActivity {
 
     private void initScannerParams() {
         SmartScanner.DEBUG = true;
-        SmartScanner.detectionRatio = 0.1f;
-        SmartScanner.checkMinLengthRatio = 0.8f;
-        SmartScanner.cannyThreshold1 = 20;
-        SmartScanner.cannyThreshold2 = 50;
+        /*
+          canny 算符阈值
+          1. 低于阈值1的像素点会被认为不是边缘；
+          2. 高于阈值2的像素点会被认为是边缘；
+          3. 在阈值1和阈值2之间的像素点,若与第2步得到的边缘像素点相邻，则被认为是边缘，否则被认为不是边缘。
+         */
+        SmartScanner.cannyThreshold1 = 20; //canny 算符阈值1
+        SmartScanner.cannyThreshold2 = 50; //canny 算符阈值2
+        /*
+         * 霍夫变换检测线段参数
+         * 1. threshold: 最小投票数，要检测一条直线所需最少的的曲线交点，增大该值会减少检测出的线段数量。
+         * 2. minLinLength: 能组成一条直线的最少点的数量, 点数量不足的直线将被抛弃。
+         * 3. maxLineGap: 能被认为在一条直线上的点的最大距离，若出现较多断断续续的线段可以适当增大该值。
+         */
         SmartScanner.houghLinesThreshold = 130;
         SmartScanner.houghLinesMinLineLength = 80;
         SmartScanner.houghLinesMaxLineGap = 10;
+        /*
+         * 高斯模糊半径，用于消除噪点，必须为正奇数。
+         * 第一次为原图模糊，第二次为灰度图模糊
+         */
         SmartScanner.firstGaussianBlurRadius = 3;
         SmartScanner.secondGaussianBlurRadius = 3;
+
+        // 检测范围比例, 比例越小表示待检测物体要更靠近边框
+        SmartScanner.detectionRatio = 0.1f;
+        // 线段最小长度检测比例
+        SmartScanner.checkMinLengthRatio = 0.8f;
+        // 为了提高性能，检测的图片会缩小到该尺寸之内
         SmartScanner.maxSize = 300;
+        // 检测角度阈值
         SmartScanner.angleThreshold = 5;
         // don't forget reload params
         SmartScanner.reloadParams();

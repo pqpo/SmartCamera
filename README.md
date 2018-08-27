@@ -4,26 +4,29 @@
 
 **SmartCamera** 是一个 Android 相机拓展库，提供了一个高度可定制的**实时扫描模块**能够实时采集并且识别相机内物体边框是否吻合指定区域。如果觉得还不错，欢迎 star，fork。
 
-语言描述起来略显生涩，具体实现的功能如下图所示，适用于身份证，名片，文档等内容的扫描、自动拍摄并且裁剪, 你也可以下载 apk 体验：
+语言描述起来略显生涩，具体实现的功能如下图所示，适用于身份证，名片，文档等内容的扫描、自动拍摄并且裁剪。   
 
-[SmartCamera-Sample-debug.apk](art/SmartCamera-Sample-debug.apk)
+你也可以下载 apk 体验： [SmartCamera-Sample-debug.apk](art/SmartCamera-Sample-debug.apk)
 
 ![](art/smartcamera_demo.gif)
 
-在相机实现上，SmartCamera 以源码的方式引用了 Google 开源的 [CameraView](https://github.com/google/cameraview) ，并且稍作修改以支持 Camera.PreviewCallback 回调来获取相机预览流。  
+**实时扫描模块（SmartScanner）是本库的核心功能所在，配合相机 PreviewCallback 接口回调的预览流和选框视图 MaskView 提供的选框区域 RectF，能以不错的性能实时判断出内容是否吻合选框**。
+
+为了更方便的使用 Android Camera，SmartCamera 以源码的方式引用了 Google 开源的 [CameraView](https://github.com/google/cameraview) ，并且稍作修改以支持 Camera.PreviewCallback 回调来获取相机预览流。  
 
 SmartCameraView 继承于修改后的 CameraView，为其添加了一个选框蒙版视图（MaskView）和一个实时扫描模块（SmartScanner）。其中选框视图即是你看到的相机上面的那层选取框，并配备了一个由上到下的扫描效果，当然你也可以实现 MaskViewImpl 接口来自定义选框视图。
 
-**实时扫描模块（SmartScanner）是本库的核心功能所在，配合相机 PreviewCallback 接口回调的预览流和选框视图 MaskView 提供的选框区域 RectF，能以不错的性能实时判断出内容是否吻合选框**。
+所以你只要使用本库提供的 SmartCameraView 即可实现上述 Demo 中的效果。
 
-你也可以关注我的另一个库 [SmartCropper](https://github.com/pqpo/SmartCropper)： 一个简单易用的智能图片裁剪库，适用于身份证，名片，文档等照片的裁剪。
+（你也可以关注我的另一个库 [SmartCropper](https://github.com/pqpo/SmartCropper)： 一个简单易用的智能图片裁剪库，适用于身份证，名片，文档等照片的裁剪。）
 
 ## 扫描算法调优
- SmartScanner 提供了丰富的算法配置，使用者可以自己修改扫描算法以获得更好的适配性，阅读附录一提供的各参数使用说明来获得更好的识别效果。
+
+1. SmartScanner 提供了丰富的算法配置，使用者可以自己修改扫描算法以获得更好的适配性，阅读**附录一**提供的各参数使用说明来获得更好的识别效果。
  
 ![](art/smartscannerparams.jpg)
 
-为了更方便、高效地调优算法，SmartScanner 贴心地为你提供了扫描预览模式，开启预览功能后，你可以通过 SmartScanner 获取每一帧处理的结果输出到 ImageView 中实时观察 native 层扫描的结果，其中白线区域即为边缘检测的结果，白线加粗区域即为识别出的边框。  
+2. 为了更方便、高效地调优算法，SmartScanner 贴心地为你提供了**扫描预览模式**，开启预览功能后，你可以通过 SmartScanner 获取每一帧处理的结果输出到 ImageView 中实时观察 native 层扫描的结果，其中白线区域即为边缘检测的结果，白线加粗区域即为识别出的边框。  
 
 ![](art/smartcamera_frame1.jpg)
 

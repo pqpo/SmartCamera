@@ -4,7 +4,9 @@
 
 The language is slightly simplistic, and the specific functions are as shown in the figure below. It is suitable for scanning, automatic shooting and cutting of ID cards, business cards, documents, etc.
 
-![](art/smartcamera1.gif)
+[SmartCamera-Sample-debug.apk](art/SmartCamera-Sample-debug.apk)
+
+![](art/smartcamera_demo.gif)
 
 In the camera implementation, SmartCamera references Google's open source [CameraView](https://github.com/google/cameraview) in source code and modified to support the Camera.PreviewCallback callback to get the camera preview stream.
 

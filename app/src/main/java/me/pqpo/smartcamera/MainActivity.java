@@ -1,5 +1,6 @@
 package me.pqpo.smartcamera;
 
+import android.Manifest;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -11,9 +12,13 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.google.android.cameraview.CameraView;
+import com.tbruyelle.rxpermissions2.RxPermissions;
 
+import io.reactivex.Observer;
+import io.reactivex.disposables.Disposable;
 import me.pqpo.smartcameralib.MaskView;
 import me.pqpo.smartcameralib.SmartCameraView;
 import me.pqpo.smartcameralib.SmartScanner;
@@ -53,6 +58,36 @@ public class MainActivity extends AppCompatActivity {
         initMaskView();
         initScannerParams();
         initCameraView();
+
+        new RxPermissions(this).request(Manifest.permission.CAMERA)
+                .subscribe(new Observer<Boolean>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(Boolean granted) {
+                        if (granted) {
+                            MaskView maskView = (MaskView) mCameraView.getMaskView();
+                            maskView.setShowScanLine(true);
+                            mCameraView.start();
+                            mCameraView.startScan();
+                        } else {
+                            Toast.makeText(MainActivity.this, "请开启相机权限！", Toast.LENGTH_LONG).show();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
     }
 
     private void initScannerParams() {
@@ -127,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
     private void initMaskView() {
         final MaskView maskView = (MaskView) mCameraView.getMaskView();
         maskView.setMaskLineColor(0xff00adb5);
-        maskView.setShowScanLine(true);
+        maskView.setShowScanLine(false);
         maskView.setScanLineGradient(0xff00adb5, 0x0000adb5);
         maskView.setMaskLineWidth(2);
         maskView.setMaskRadius(5);
@@ -171,8 +206,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        mCameraView.start();
-        mCameraView.startScan();
+        // request Camera permission first!
+//        mCameraView.start();
+//        mCameraView.startScan();
     }
 
 

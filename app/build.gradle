@@ -21,6 +21,7 @@ android {
 }
 
 dependencies {
+    implementation 'com.github.tbruyelle:rxpermissions:0.10.2'
     implementation project(':smartcameralib')
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "com.android.support:appcompat-v7:$supportLibraryVersion"

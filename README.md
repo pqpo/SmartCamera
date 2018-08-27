@@ -4,9 +4,11 @@
 
 **SmartCamera** 是一个 Android 相机拓展库，提供了一个高度可定制的**实时扫描模块**能够实时采集并且识别相机内物体边框是否吻合指定区域。如果觉得还不错，欢迎 star，fork。
 
-语言描述起来略显生涩，具体实现的功能如下图所示，适用于身份证，名片，文档等内容的扫描、自动拍摄并且裁剪：
+语言描述起来略显生涩，具体实现的功能如下图所示，适用于身份证，名片，文档等内容的扫描、自动拍摄并且裁剪, 你也可以下载 apk 体验：
 
-![](art/smartcamera1.gif)
+[SmartCamera-Sample-debug.apk](art/SmartCamera-Sample-debug.apk)
+
+![](art/smartcamera_demo.gif)
 
 在相机实现上，SmartCamera 以源码的方式引用了 Google 开源的 [CameraView](https://github.com/google/cameraview) ，并且稍作修改以支持 Camera.PreviewCallback 回调来获取相机预览流。  
 

@@ -16,7 +16,7 @@
 
 SmartCameraView 继承于修改后的 CameraView，为其添加了一个选框蒙版视图（MaskView）和一个实时扫描模块（SmartScanner）。其中选框视图即是你看到的相机上面的那层选取框，并配备了一个由上到下的扫描效果，当然你也可以实现 MaskViewImpl 接口来自定义选框视图。
 
-所以你只要使用本库提供的 SmartCameraView 即可实现上述 Demo 中的效果。
+你只要使用本库提供的 SmartCameraView 即可实现上述 Demo 中的效果, **当然如果你的项目中已经实现了相机模块，你也可以直接使用 SmartScanner 来实现实时扫描效果**。
 
 （你也可以关注我的另一个库 [SmartCropper](https://github.com/pqpo/SmartCropper)： 一个简单易用的智能图片裁剪库，适用于身份证，名片，文档等照片的裁剪。）
 

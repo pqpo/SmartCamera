@@ -201,7 +201,7 @@ public class MaskView extends View implements MaskViewImpl{
     }
 
     private void initMaskSize(int canvasWidth, int canvasHeight) {
-        if (maskWidth == -1 || maskHeight == -1) {
+        if (maskWidth <= 0 || maskHeight <= 0) {
             if (canvasWidth < canvasHeight) {
                 maskWidth = (int) (1.0f * canvasWidth * 2 / 3);
                 maskHeight = (int) (1.0f * maskWidth / 0.65);

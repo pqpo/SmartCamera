@@ -8,13 +8,14 @@ android {
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 3
+        versionName "1.0.2"
 
         externalNativeBuild {
             cmake {
-                cppFlags "-std=c++11 -frtti -fexceptions -lz"
-                abiFilters 'armeabi', 'armeabi-v7a', 'mips', 'x86'
+                cppFlags "-std=c++11 -frtti -lz"
+                abiFilters 'armeabi-v7a', 'x86'
+//                abiFilters 'armeabi', 'armeabi-v7a', 'mips', 'x86'
             }
         }
     }

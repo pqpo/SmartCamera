@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView ivPreview;
     private AlertDialog alertDialog;
     private ImageView ivDialog;
+    private boolean granted = false;
 
     protected void onCreate(Bundle savedInstanceState) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -68,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onNext(Boolean granted) {
+                        MainActivity.this.granted = granted;
                         if (granted) {
                             MaskView maskView = (MaskView) mCameraView.getMaskView();
                             maskView.setShowScanLine(true);
@@ -207,8 +209,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // request Camera permission first!
-//        mCameraView.start();
-//        mCameraView.startScan();
+        if (granted) {
+            mCameraView.start();
+            mCameraView.startScan();
+        }
     }
 
 

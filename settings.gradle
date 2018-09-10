@@ -1,1 +1,1 @@
-include ':app', ':smartcameralib', ':cameraviewlib'
+include ':app', ':smartcameralib'

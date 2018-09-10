@@ -8,8 +8,8 @@ android {
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
-        versionName "1.0.2"
+        versionCode 4
+        versionName "1.1.0"
 
         externalNativeBuild {
             cmake {
@@ -34,6 +34,20 @@ android {
         }
     }
 
+    sourceSets {
+        main {
+            def dir = 'cameraview'
+            res.srcDirs += "src/$dir/res"
+
+            java.srcDirs += "src/$dir/java"
+            java.srcDirs += "src/$dir/base"
+            java.srcDirs += "src/$dir/api9"
+            java.srcDirs += "src/$dir/api14"
+            java.srcDirs += "src/$dir/api21"
+            java.srcDirs += "src/$dir/api23"
+        }
+    }
+
     lintOptions {
         abortOnError false
     }
@@ -43,6 +57,5 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    api project(':cameraviewlib')
     implementation "com.android.support:appcompat-v7:$supportLibraryVersion"
 }

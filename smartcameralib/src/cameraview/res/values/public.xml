@@ -12,10 +12,10 @@
     limitations under the License.
 -->
 <resources>
-    <public name="facing" type="attr"/>
-    <public name="aspectRatio" type="attr"/>
-    <public name="autoFocus" type="attr"/>
-    <public name="flash" type="attr"/>
+    <public name="cv_facing" type="attr"/>
+    <public name="cv_aspectRatio" type="attr"/>
+    <public name="cv_autoFocus" type="attr"/>
+    <public name="cv_flash" type="attr"/>
 
     <public name="Widget.CameraView" type="style"/>
 </resources>

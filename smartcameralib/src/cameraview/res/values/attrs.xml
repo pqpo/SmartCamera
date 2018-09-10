@@ -19,18 +19,18 @@
         -->
         <attr name="android:adjustViewBounds"/>
         <!-- Direction the camera faces relative to device screen. -->
-        <attr name="facing" format="enum">
+        <attr name="cv_facing" format="enum">
             <!-- The camera device faces the opposite direction as the device's screen. -->
             <enum name="back" value="0"/>
             <!-- The camera device faces the same direction as the device's screen. -->
             <enum name="front" value="1"/>
         </attr>
         <!-- Aspect ratio of camera preview and pictures. -->
-        <attr name="aspectRatio" format="string"/>
+        <attr name="cv_aspectRatio" format="string"/>
         <!-- Continuous auto focus mode. -->
-        <attr name="autoFocus" format="boolean"/>
+        <attr name="cv_autoFocus" format="boolean"/>
         <!-- The flash mode. -->
-        <attr name="flash" format="enum">
+        <attr name="cv_flash" format="enum">
             <!-- Flash will not be fired. -->
             <enum name="off" value="0"/>
             <!--

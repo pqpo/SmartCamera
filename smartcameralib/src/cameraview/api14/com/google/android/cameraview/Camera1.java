@@ -21,6 +21,9 @@ import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.os.Build;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Message;
 import android.support.v4.util.SparseArrayCompat;
 import android.view.SurfaceHolder;
 
@@ -72,6 +75,10 @@ class Camera1 extends CameraViewImpl {
 
     private int mDisplayOrientation;
 
+    private Handler processHandler;
+
+    private byte[] previewBuffer;
+
     Camera1(Callback callback, PreviewImpl preview) {
         super(callback, preview);
         preview.setCallback(new PreviewImpl.Callback() {
@@ -89,18 +96,33 @@ class Camera1 extends CameraViewImpl {
         if(mCameraParameters == null || mCamera == null) {
             return;
         }
+
+        if (processHandler != null) {
+            processHandler.getLooper().quitSafely();
+        }
+        HandlerThread processThread = new HandlerThread("processThread");
+        processThread.start();
+        processHandler = new Handler(processThread.getLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                if (previewBuffer != null && mCallback != null) {
+                    mCallback.onPicturePreview(previewBuffer);
+                    if (mCamera != null) {
+                        mCamera.addCallbackBuffer(previewBuffer);
+                    }
+                }
+            }
+        };
+
         int width = mCameraParameters.getPreviewSize().width;
         int height = mCameraParameters.getPreviewSize().height;
-        mCamera.addCallbackBuffer(new byte[width * height * ImageFormat.getBitsPerPixel(ImageFormat.NV21) / 8]);
+        previewBuffer = new byte[width * height * ImageFormat.getBitsPerPixel(ImageFormat.NV21) / 8];
+        mCamera.addCallbackBuffer(previewBuffer);
         mCamera.setPreviewCallbackWithBuffer(new Camera.PreviewCallback() {
-
+            @Override
             public void onPreviewFrame(byte[] data, Camera camera) {
-                if (mCamera != null) {
-                    mCamera.addCallbackBuffer(data);
-                }
-                if (mCallback != null) {
-                    mCallback.onPicturePreview(data);
-                }
+                processHandler.sendEmptyMessage(1);
             }
         });
         mCamera.startPreview();
@@ -149,6 +171,9 @@ class Camera1 extends CameraViewImpl {
 
     @Override
     void stop() {
+        if (processHandler != null) {
+            processHandler.getLooper().quitSafely();
+        }
         if (mCamera != null) {
             mCamera.stopPreview();
         }

@@ -113,10 +113,8 @@ public class MainActivity extends AppCompatActivity {
         SmartScanner.houghLinesMaxLineGap = 10;
         /*
          * 高斯模糊半径，用于消除噪点，必须为正奇数。
-         * 第一次为原图模糊，第二次为灰度图模糊
          */
-        SmartScanner.firstGaussianBlurRadius = 3;
-        SmartScanner.secondGaussianBlurRadius = 3;
+        SmartScanner.gaussianBlurRadius = 3;
 
         // 检测范围比例, 比例越小表示待检测物体要更靠近边框
         SmartScanner.detectionRatio = 0.1f;

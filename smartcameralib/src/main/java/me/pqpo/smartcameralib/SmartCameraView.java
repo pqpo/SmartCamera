@@ -14,8 +14,6 @@ import android.util.AttributeSet;
 import com.google.android.cameraview.CameraView;
 import com.google.android.cameraview.Size;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 /**
  * Created by pqpo on 2018/8/15.
  */
@@ -27,8 +25,6 @@ public class SmartCameraView extends CameraView {
 
     protected MaskViewImpl maskView;
     protected boolean scanning = true;
-    private Thread previewThread;
-    private ConcurrentLinkedQueue<byte[]> previewDataQueue;
     private Handler uiHandler;
     private OnScanResultListener onScanResultListener;
 
@@ -49,9 +45,6 @@ public class SmartCameraView extends CameraView {
     private void init() {
         smartScanner = new SmartScanner();
         uiHandler = new ScanResultHandler(this);
-        previewDataQueue = new ConcurrentLinkedQueue<>();
-        previewThread = new ScanThread();
-        previewThread.start();
 
         addCallback(new Callback() {
             @Override
@@ -60,8 +53,12 @@ public class SmartCameraView extends CameraView {
                 if (data == null || !scanning) {
                     return;
                 }
-                if (previewDataQueue.size() <= 10) {
-                    previewDataQueue.offer(data);
+                int previewRotation = getPreviewRotation();
+                Size size = getPreviewSize();
+                Rect revisedMaskRect = getAdjustPreviewMaskRect();
+                if (revisedMaskRect != null && size != null) {
+                    int result = smartScanner.previewScan(data, size.getWidth(), size.getHeight(), previewRotation, revisedMaskRect);
+                    uiHandler.sendEmptyMessage(result);
                 }
             }
         });
@@ -81,12 +78,6 @@ public class SmartCameraView extends CameraView {
 
     public void setOnScanResultListener(OnScanResultListener onScanResultListener) {
         this.onScanResultListener = onScanResultListener;
-    }
-
-    @Override
-    protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        previewThread.interrupt();
     }
 
     public Rect getAdjustPictureMaskRect() {
@@ -184,30 +175,6 @@ public class SmartCameraView extends CameraView {
 
     public interface OnScanResultListener {
         boolean onScanResult(SmartCameraView smartCameraView, int result);
-    }
-
-    private class ScanThread extends Thread {
-
-        public ScanThread() {
-            super("ScanThread");
-        }
-
-        @Override
-        public void run() {
-            super.run();
-            while (!previewThread.isInterrupted()) {
-                byte[] data = previewDataQueue.poll();
-                if (data != null && scanning) {
-                    int previewRotation = getPreviewRotation();
-                    Size size = getPreviewSize();
-                    Rect revisedMaskRect = getAdjustPreviewMaskRect();
-                    if (revisedMaskRect != null && size != null) {
-                        int result = smartScanner.previewScan(data, size.getWidth(), size.getHeight(), previewRotation, revisedMaskRect);
-                        uiHandler.sendEmptyMessage(result);
-                    }
-                }
-            }
-        }
     }
 
     private static class ScanResultHandler extends Handler {

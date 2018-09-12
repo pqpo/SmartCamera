@@ -20,8 +20,7 @@ static const char* const LOG_TAG = "smart_camera_lib";
 #define LOG_D(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 
 static struct {
-    int firstGaussianBlurRadius = 3;
-    int secondGaussianBlurRadius = 3;
+    int gaussianBlurRadius = 3;
     int cannyThreshold1 = 5;
     int cannyThreshold2 = 80;
     int thresholdThresh = 0;
@@ -37,7 +36,7 @@ static struct {
 void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation, int maskX, int maskY, int maskWidth, int maskHeight, float scaleRatio) {
     Mat mYuv(height+height/2, width, CV_8UC1, (uchar *)yuvData);
     Mat imgMat(height, width, CV_8UC1);
-    cvtColor(mYuv, imgMat, CV_YUV420sp2RGB);
+    cvtColor(mYuv, imgMat, CV_YUV420sp2GRAY);
 
     if (rotation == 90) {
         matRotateClockWise90(imgMat);
@@ -61,14 +60,10 @@ void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation,
                                        static_cast<int>(maskHeight * scaleRatio)));
 
     Mat blurMat;
-    GaussianBlur(resizeMat, blurMat, Size(gScannerParams.firstGaussianBlurRadius,gScannerParams.firstGaussianBlurRadius), 0);
-    Mat grayMat;
-    cvtColor(blurMat, grayMat, CV_RGB2GRAY);
-    Mat blurMat2;
-    GaussianBlur(grayMat, blurMat2, Size(gScannerParams.secondGaussianBlurRadius, gScannerParams.secondGaussianBlurRadius), 0);
+    GaussianBlur(resizeMat, blurMat, Size(gScannerParams.gaussianBlurRadius,gScannerParams.gaussianBlurRadius), 0);
 
     Mat cannyMat;
-    Canny(blurMat2, cannyMat, gScannerParams.cannyThreshold1, gScannerParams.cannyThreshold2);
+    Canny(blurMat, cannyMat, gScannerParams.cannyThreshold1, gScannerParams.cannyThreshold2);
     Mat dilateMat;
     dilate(cannyMat, dilateMat, getStructuringElement(MORPH_RECT, Size(2, 2)));
     Mat thresholdMat;
@@ -198,8 +193,7 @@ Java_me_pqpo_smartcameralib_SmartScanner_previewScan(JNIEnv *env, jclass type, j
 static void initScannerParams(JNIEnv *env) {
     jclass classDocScanner = env->FindClass(kClassScanner);
     DEBUG = env->GetStaticBooleanField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "DEBUG", "Z"));
-    gScannerParams.firstGaussianBlurRadius = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "firstGaussianBlurRadius", "I"));
-    gScannerParams.secondGaussianBlurRadius = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "secondGaussianBlurRadius", "I"));
+    gScannerParams.gaussianBlurRadius = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "gaussianBlurRadius", "I"));
     gScannerParams.cannyThreshold1 = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "cannyThreshold1", "I"));
     gScannerParams.cannyThreshold2 = env->GetStaticIntField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "cannyThreshold2", "I"));
     gScannerParams.checkMinLengthRatio = env->GetStaticFloatField(classDocScanner, env -> GetStaticFieldID(classDocScanner, "checkMinLengthRatio", "F"));

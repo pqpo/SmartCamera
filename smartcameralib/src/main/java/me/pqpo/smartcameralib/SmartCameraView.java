@@ -12,7 +12,7 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 
 import com.google.android.cameraview.CameraView;
-import com.google.android.cameraview.Size;
+import com.google.android.cameraview.base.Size;
 
 /**
  * Created by pqpo on 2018/8/15.

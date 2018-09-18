@@ -21,14 +21,14 @@ import android.content.Context;
 import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.view.Surface;
+import android.view.SurfaceHolder;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 
 import me.pqpo.smartcameralib.R;
 
-@TargetApi(14)
-class TextureViewPreview extends PreviewImpl {
+class TextureViewPreview {
 
     private final TextureView mTextureView;
 
@@ -36,7 +36,7 @@ class TextureViewPreview extends PreviewImpl {
 
     TextureViewPreview(Context context, ViewGroup parent) {
         final View view = View.inflate(context, R.layout.texture_view, parent);
-        mTextureView = (TextureView) view.findViewById(R.id.texture_view);
+        mTextureView = view.findViewById(R.id.texture_view);
         mTextureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
 
             @Override
@@ -67,38 +67,31 @@ class TextureViewPreview extends PreviewImpl {
 
     // This method is called only from Camera2.
     @TargetApi(15)
-    @Override
     void setBufferSize(int width, int height) {
         mTextureView.getSurfaceTexture().setDefaultBufferSize(width, height);
     }
 
-    @Override
     Surface getSurface() {
         return new Surface(mTextureView.getSurfaceTexture());
     }
 
-    @Override
     SurfaceTexture getSurfaceTexture() {
         return mTextureView.getSurfaceTexture();
     }
 
-    @Override
     View getView() {
         return mTextureView;
     }
 
-    @Override
     Class getOutputClass() {
         return SurfaceTexture.class;
     }
 
-    @Override
     void setDisplayOrientation(int displayOrientation) {
         mDisplayOrientation = displayOrientation;
         configureTransform();
     }
 
-    @Override
     boolean isReady() {
         return mTextureView.getSurfaceTexture() != null;
     }
@@ -140,6 +133,41 @@ class TextureViewPreview extends PreviewImpl {
             matrix.postRotate(180, getWidth() / 2, getHeight() / 2);
         }
         mTextureView.setTransform(matrix);
+    }
+
+    interface Callback {
+        void onSurfaceChanged();
+    }
+
+    private Callback mCallback;
+
+    private int mWidth;
+
+    private int mHeight;
+
+    void setCallback(Callback callback) {
+        mCallback = callback;
+    }
+
+    protected void dispatchSurfaceChanged() {
+        mCallback.onSurfaceChanged();
+    }
+
+    SurfaceHolder getSurfaceHolder() {
+        return null;
+    }
+
+    void setSize(int width, int height) {
+        mWidth = width;
+        mHeight = height;
+    }
+
+    int getWidth() {
+        return mWidth;
+    }
+
+    int getHeight() {
+        return mHeight;
     }
 
 }

@@ -19,7 +19,6 @@ package com.google.android.cameraview;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.IntDef;
@@ -30,6 +29,11 @@ import android.support.v4.os.ParcelableCompatCreatorCallbacks;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
+
+import com.google.android.cameraview.base.AspectRatio;
+import com.google.android.cameraview.base.Constants;
+import com.google.android.cameraview.base.DisplayOrientationDetector;
+import com.google.android.cameraview.base.Size;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -76,7 +80,7 @@ public class CameraView extends FrameLayout {
     public @interface Flash {
     }
 
-    protected CameraViewImpl mImpl;
+    protected Camera1 mImpl;
 
     private final CallbackBridge mCallbacks;
 
@@ -92,7 +96,6 @@ public class CameraView extends FrameLayout {
         this(context, attrs, 0);
     }
 
-    @SuppressWarnings("WrongConstant")
     public CameraView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         if (isInEditMode()){
@@ -100,18 +103,8 @@ public class CameraView extends FrameLayout {
             mDisplayOrientationDetector = null;
             return;
         }
-        // Internal setup
-        final PreviewImpl preview = createPreviewImpl(context);
         mCallbacks = new CallbackBridge();
-        mImpl = new Camera1(mCallbacks, preview);
-//        if (Build.VERSION.SDK_INT < 21) {
-//            mImpl = new Camera1(mCallbacks, preview);
-//        } else if (Build.VERSION.SDK_INT < 23) {
-//            mImpl = new Camera2(mCallbacks, preview, context);
-//        } else {
-//            mImpl = new Camera2Api23(mCallbacks, preview, context);
-//        }
-        // Attributes
+        mImpl = new Camera1(mCallbacks, new TextureViewPreview(context, this));
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CameraView, defStyleAttr,
                 R.style.Widget_CameraView);
         mAdjustViewBounds = a.getBoolean(R.styleable.CameraView_android_adjustViewBounds, false);
@@ -132,17 +125,6 @@ public class CameraView extends FrameLayout {
                 mImpl.setDisplayOrientation(displayOrientation);
             }
         };
-    }
-
-    @NonNull
-    private PreviewImpl createPreviewImpl(Context context) {
-        PreviewImpl preview;
-        if (Build.VERSION.SDK_INT < 14) {
-            preview = new SurfaceViewPreview(context, this);
-        } else {
-            preview = new TextureViewPreview(context, this);
-        }
-        return preview;
     }
 
     @Override
@@ -254,7 +236,7 @@ public class CameraView extends FrameLayout {
             //store the state ,and restore this state after fall back o Camera1
             Parcelable state=onSaveInstanceState();
             // Camera2 uses legacy hardware layer; fall back to Camera1
-            mImpl = new Camera1(mCallbacks, createPreviewImpl(getContext()));
+            mImpl = new Camera1(mCallbacks, new TextureViewPreview(getContext(), this));
             onRestoreInstanceState(state);
             mImpl.start();
         }
@@ -422,7 +404,7 @@ public class CameraView extends FrameLayout {
         mImpl.takePicture();
     }
 
-    private class CallbackBridge implements CameraViewImpl.Callback {
+    private class CallbackBridge implements Camera1.Callback {
 
         private final ArrayList<Callback> mCallbacks = new ArrayList<>();
 

@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package com.google.android.cameraview;
+package com.google.android.cameraview.base;
 
-
-interface Constants {
+public interface Constants {
 
     AspectRatio DEFAULT_ASPECT_RATIO = AspectRatio.of(4, 3);
 

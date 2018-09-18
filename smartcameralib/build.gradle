@@ -38,13 +38,7 @@ android {
         main {
             def dir = 'cameraview'
             res.srcDirs += "src/$dir/res"
-
             java.srcDirs += "src/$dir/java"
-            java.srcDirs += "src/$dir/base"
-            java.srcDirs += "src/$dir/api9"
-            java.srcDirs += "src/$dir/api14"
-            java.srcDirs += "src/$dir/api21"
-            java.srcDirs += "src/$dir/api23"
         }
     }
 

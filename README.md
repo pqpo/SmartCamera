@@ -20,6 +20,8 @@ SmartCameraView 继承于修改后的 CameraView，为其添加了一个选框�
 
 （你也可以关注我的另一个库 [SmartCropper](https://github.com/pqpo/SmartCropper)： 一个简单易用的智能图片裁剪库，适用于身份证，名片，文档等照片的裁剪。）
 
+SmartCamera 原理分析：[Android 端相机视频流采集与实时边框识别](https://pqpo.me/2018/09/12/android-camera-real-time-scanning/)
+
 ## 扫描算法调优
 
 1. SmartScanner 提供了丰富的算法配置，使用者可以自己修改扫描算法以获得更好的适配性，阅读**附录一**提供的各参数使用说明来获得更好的识别效果。

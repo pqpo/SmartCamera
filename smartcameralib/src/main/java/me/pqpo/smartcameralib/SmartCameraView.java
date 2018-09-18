@@ -58,7 +58,7 @@ public class SmartCameraView extends CameraView {
                 Rect revisedMaskRect = getAdjustPreviewMaskRect();
                 if (revisedMaskRect != null && size != null) {
                     int result = smartScanner.previewScan(data, size.getWidth(), size.getHeight(), previewRotation, revisedMaskRect);
-                    uiHandler.sendEmptyMessage(result);
+                    uiHandler.obtainMessage(result, data).sendToTarget();
                 }
             }
         });
@@ -174,7 +174,7 @@ public class SmartCameraView extends CameraView {
     }
 
     public interface OnScanResultListener {
-        boolean onScanResult(SmartCameraView smartCameraView, int result);
+        boolean onScanResult(SmartCameraView smartCameraView, int result, byte[] yuvData);
     }
 
     private static class ScanResultHandler extends Handler {
@@ -192,8 +192,9 @@ public class SmartCameraView extends CameraView {
                 return;
             }
             int result = msg.what;
+            byte[] data = (byte[]) msg.obj;
             if (smartCameraView.onScanResultListener == null
-                    || !smartCameraView.onScanResultListener.onScanResult(smartCameraView, result)) {
+                    || !smartCameraView.onScanResultListener.onScanResult(smartCameraView, result, data)) {
                 if (result == 1) {
                     smartCameraView.takePicture();
                     smartCameraView.stopScan();

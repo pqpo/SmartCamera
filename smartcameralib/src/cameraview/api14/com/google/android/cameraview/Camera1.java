@@ -98,7 +98,7 @@ class Camera1 extends CameraViewImpl {
         }
 
         if (processHandler != null) {
-            processHandler.getLooper().quitSafely();
+            processHandler.getLooper().quit();
         }
         HandlerThread processThread = new HandlerThread("processThread");
         processThread.start();
@@ -172,7 +172,7 @@ class Camera1 extends CameraViewImpl {
     @Override
     void stop() {
         if (processHandler != null) {
-            processHandler.getLooper().quitSafely();
+            processHandler.getLooper().quit();
         }
         if (mCamera != null) {
             mCamera.stopPreview();

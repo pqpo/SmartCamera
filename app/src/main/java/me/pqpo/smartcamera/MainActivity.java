@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
         mCameraView.getSmartScanner().setPreview(true);
         mCameraView.setOnScanResultListener(new SmartCameraView.OnScanResultListener() {
             @Override
-            public boolean onScanResult(SmartCameraView smartCameraView, int result) {
+            public boolean onScanResult(SmartCameraView smartCameraView, int result, byte[] yuvData) {
                 Bitmap previewBitmap = smartCameraView.getPreviewBitmap();
                 if (previewBitmap != null) {
                     ivPreview.setImageBitmap(previewBitmap);

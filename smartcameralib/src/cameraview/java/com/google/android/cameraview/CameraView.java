@@ -127,6 +127,10 @@ public class CameraView extends FrameLayout {
         };
     }
 
+    public Camera1 getCamera() {
+        return mImpl;
+    }
+
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
@@ -267,21 +271,15 @@ public class CameraView extends FrameLayout {
 
     /**
      * Add a new callback.
-     *
-     * @param callback The {@link Callback} to add.
-     * @see #removeCallback(Callback)
      */
-    public void addCallback(@NonNull Callback callback) {
+    public void addCallback(@NonNull Camera1.Callback callback) {
         mCallbacks.add(callback);
     }
 
     /**
      * Remove a callback.
-     *
-     * @param callback The {@link Callback} to remove.
-     * @see #addCallback(Callback)
      */
-    public void removeCallback(@NonNull Callback callback) {
+    public void removeCallback(@NonNull Camera1.Callback callback) {
         mCallbacks.remove(callback);
     }
 
@@ -398,58 +396,57 @@ public class CameraView extends FrameLayout {
 
     /**
      * Take a picture. The result will be returned to
-     * {@link Callback#onPictureTaken(CameraView, byte[])}.
      */
     public void takePicture() {
         mImpl.takePicture();
     }
 
-    private class CallbackBridge implements Camera1.Callback {
+    private class CallbackBridge extends Camera1.Callback {
 
-        private final ArrayList<Callback> mCallbacks = new ArrayList<>();
+        private final ArrayList<Camera1.Callback> mCallbacks = new ArrayList<>();
 
         private boolean mRequestLayoutOnOpen;
 
         CallbackBridge() {
         }
 
-        public void add(Callback callback) {
+        public void add(Camera1.Callback callback) {
             mCallbacks.add(callback);
         }
 
-        public void remove(Callback callback) {
+        public void remove(Camera1.Callback callback) {
             mCallbacks.remove(callback);
         }
 
         @Override
-        public void onCameraOpened() {
+        public void onCameraOpened(Camera1 camera) {
             if (mRequestLayoutOnOpen) {
                 mRequestLayoutOnOpen = false;
                 requestLayout();
             }
-            for (Callback callback : mCallbacks) {
-                callback.onCameraOpened(CameraView.this);
+            for (Camera1.Callback callback : mCallbacks) {
+                callback.onCameraOpened(camera);
             }
         }
 
         @Override
-        public void onCameraClosed() {
-            for (Callback callback : mCallbacks) {
-                callback.onCameraClosed(CameraView.this);
+        public void onCameraClosed(Camera1 camera) {
+            for (Camera1.Callback callback : mCallbacks) {
+                callback.onCameraClosed(camera);
             }
         }
 
         @Override
-        public void onPictureTaken(byte[] data) {
-            for (Callback callback : mCallbacks) {
-                callback.onPictureTaken(CameraView.this, data);
+        public void onPictureTaken(Camera1 camera, byte[] data) {
+            for (Camera1.Callback callback : mCallbacks) {
+                callback.onPictureTaken(camera, data);
             }
         }
 
         @Override
-        public void onPicturePreview(byte[] data) {
-            for (Callback callback : mCallbacks) {
-                callback.onPicturePreview(CameraView.this, data);
+        public void onPicturePreview(Camera1 camera, byte[] data) {
+            for (Camera1.Callback callback : mCallbacks) {
+                callback.onPicturePreview(camera, data);
             }
         }
 
@@ -507,41 +504,6 @@ public class CameraView extends FrameLayout {
 
         });
 
-    }
-
-    /**
-     * Callback for monitoring events about {@link CameraView}.
-     */
-    @SuppressWarnings("UnusedParameters")
-    public abstract static class Callback {
-
-        /**
-         * Called when camera is opened.
-         *
-         * @param cameraView The associated {@link CameraView}.
-         */
-        public void onCameraOpened(CameraView cameraView) {
-        }
-
-        /**
-         * Called when camera is closed.
-         *
-         * @param cameraView The associated {@link CameraView}.
-         */
-        public void onCameraClosed(CameraView cameraView) {
-        }
-
-        /**
-         * Called when a picture is taken.
-         *
-         * @param cameraView The associated {@link CameraView}.
-         * @param data       JPEG data.
-         */
-        public void onPictureTaken(CameraView cameraView, byte[] data) {
-        }
-
-        public void onPicturePreview(CameraView cameraView, byte[] data) {
-        }
     }
 
 }

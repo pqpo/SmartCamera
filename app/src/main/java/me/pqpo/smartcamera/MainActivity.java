@@ -14,7 +14,7 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.google.android.cameraview.CameraView;
+import com.google.android.cameraview.Camera1;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import io.reactivex.Observer;
@@ -141,11 +141,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mCameraView.addCallback(new CameraView.Callback() {
+        mCameraView.addCallback(new Camera1.Callback() {
 
             @Override
-            public void onPictureTaken(CameraView cameraView, byte[] data) {
-                super.onPictureTaken(cameraView, data);
+            public void onCameraOpened(Camera1 camera) {
+                super.onCameraOpened(camera);
+            }
+
+            @Override
+            public void onPictureTaken(Camera1 camera, byte[] data) {
+                super.onPictureTaken(camera, data);
                 mCameraView.cropImage(data, new SmartCameraView.CropCallback() {
                     @Override
                     public void onCropped(Bitmap cropBitmap) {

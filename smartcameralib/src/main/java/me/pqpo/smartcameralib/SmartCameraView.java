@@ -11,6 +11,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 
+import com.google.android.cameraview.Camera1;
 import com.google.android.cameraview.CameraView;
 import com.google.android.cameraview.base.Size;
 
@@ -46,10 +47,10 @@ public class SmartCameraView extends CameraView {
         smartScanner = new SmartScanner();
         uiHandler = new ScanResultHandler(this);
 
-        addCallback(new Callback() {
+        addCallback(new Camera1.Callback() {
             @Override
-            public void onPicturePreview(CameraView cameraView, byte[] data) {
-                super.onPicturePreview(cameraView, data);
+            public void onPicturePreview(Camera1 camera, byte[] data) {
+                super.onPicturePreview(camera, data);
                 if (data == null || !scanning) {
                     return;
                 }

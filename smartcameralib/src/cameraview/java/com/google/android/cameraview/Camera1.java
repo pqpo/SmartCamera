@@ -39,7 +39,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-class Camera1 {
+public class Camera1 {
 
     private static final int INVALID_CAMERA_ID = -1;
 
@@ -120,7 +120,7 @@ class Camera1 {
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
                 if (previewBuffer != null && mCallback != null) {
-                    mCallback.onPicturePreview(previewBuffer);
+                    mCallback.onPicturePreview(Camera1.this, previewBuffer);
                     if (mCamera != null) {
                         mCamera.addCallbackBuffer(previewBuffer);
                     }
@@ -315,7 +315,7 @@ class Camera1 {
 
                 public void onPictureTaken(byte[] data, Camera camera) {
                     isPictureCaptureInProgress.set(false);
-                    mCallback.onPictureTaken(data);
+                    mCallback.onPictureTaken(Camera1.this, data);
                     camera.cancelAutoFocus();
                     startPreview();
                 }
@@ -378,7 +378,7 @@ class Camera1 {
         }
         adjustCameraParameters();
         mCamera.setDisplayOrientation(calcDisplayOrientation(mDisplayOrientation));
-        mCallback.onCameraOpened();
+        mCallback.onCameraOpened(this);
     }
 
     private AspectRatio chooseAspectRatio() {
@@ -448,7 +448,7 @@ class Camera1 {
         if (mCamera != null) {
             mCamera.release();
             mCamera = null;
-            mCallback.onCameraClosed();
+            mCallback.onCameraClosed(this);
         }
     }
 
@@ -549,15 +549,15 @@ class Camera1 {
         }
     }
 
-    interface Callback {
+    public abstract static class Callback {
 
-        void onCameraOpened();
+       public void onCameraOpened(Camera1 camera){}
 
-        void onCameraClosed();
+       public void onCameraClosed(Camera1 camera){}
 
-        void onPictureTaken(byte[] data);
+       public void onPictureTaken(Camera1 camera, byte[] data){}
 
-        void onPicturePreview(byte[] data);
+       public void onPicturePreview(Camera1 camera, byte[] data){}
 
     }
 

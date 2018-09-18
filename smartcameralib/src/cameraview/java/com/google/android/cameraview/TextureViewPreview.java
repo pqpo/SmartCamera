@@ -100,7 +100,7 @@ class TextureViewPreview {
      * Configures the transform matrix for TextureView based on {@link #mDisplayOrientation} and
      * the surface size.
      */
-    void configureTransform() {
+    private void configureTransform() {
         Matrix matrix = new Matrix();
         if (mDisplayOrientation % 180 == 90) {
             final int width = getWidth();
@@ -149,7 +149,7 @@ class TextureViewPreview {
         mCallback = callback;
     }
 
-    protected void dispatchSurfaceChanged() {
+    private void dispatchSurfaceChanged() {
         mCallback.onSurfaceChanged();
     }
 
@@ -157,7 +157,7 @@ class TextureViewPreview {
         return null;
     }
 
-    void setSize(int width, int height) {
+    private void setSize(int width, int height) {
         mWidth = width;
         mHeight = height;
     }

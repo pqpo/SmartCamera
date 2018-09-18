@@ -57,7 +57,7 @@ public class CameraView extends FrameLayout {
     /** Direction the camera faces relative to device screen. */
     @IntDef({FACING_BACK, FACING_FRONT})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface Facing {
+    @interface Facing {
     }
 
     /** Flash will not be fired. */
@@ -77,10 +77,10 @@ public class CameraView extends FrameLayout {
 
     /** The mode for for the camera device's flash control */
     @IntDef({FLASH_OFF, FLASH_ON, FLASH_TORCH, FLASH_AUTO, FLASH_RED_EYE})
-    public @interface Flash {
+    @interface Flash {
     }
 
-    protected Camera1 mImpl;
+    protected CameraImpl mImpl;
 
     private final CallbackBridge mCallbacks;
 
@@ -104,7 +104,7 @@ public class CameraView extends FrameLayout {
             return;
         }
         mCallbacks = new CallbackBridge();
-        mImpl = new Camera1(mCallbacks, new TextureViewPreview(context, this));
+        mImpl = new CameraImpl(mCallbacks, new TextureViewPreview(context, this));
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CameraView, defStyleAttr,
                 R.style.Widget_CameraView);
         mAdjustViewBounds = a.getBoolean(R.styleable.CameraView_android_adjustViewBounds, false);
@@ -127,7 +127,7 @@ public class CameraView extends FrameLayout {
         };
     }
 
-    public Camera1 getCamera() {
+    public CameraImpl getCamera() {
         return mImpl;
     }
 
@@ -237,10 +237,10 @@ public class CameraView extends FrameLayout {
      */
     public void start() {
         if (!mImpl.start()) {
-            //store the state ,and restore this state after fall back o Camera1
+            //store the state ,and restore this state after fall back o CameraImpl
             Parcelable state=onSaveInstanceState();
-            // Camera2 uses legacy hardware layer; fall back to Camera1
-            mImpl = new Camera1(mCallbacks, new TextureViewPreview(getContext(), this));
+            // Camera2 uses legacy hardware layer; fall back to CameraImpl
+            mImpl = new CameraImpl(mCallbacks, new TextureViewPreview(getContext(), this));
             onRestoreInstanceState(state);
             mImpl.start();
         }
@@ -272,14 +272,14 @@ public class CameraView extends FrameLayout {
     /**
      * Add a new callback.
      */
-    public void addCallback(@NonNull Camera1.Callback callback) {
+    public void addCallback(@NonNull CameraImpl.Callback callback) {
         mCallbacks.add(callback);
     }
 
     /**
      * Remove a callback.
      */
-    public void removeCallback(@NonNull Camera1.Callback callback) {
+    public void removeCallback(@NonNull CameraImpl.Callback callback) {
         mCallbacks.remove(callback);
     }
 
@@ -401,51 +401,51 @@ public class CameraView extends FrameLayout {
         mImpl.takePicture();
     }
 
-    private class CallbackBridge extends Camera1.Callback {
+    private class CallbackBridge extends CameraImpl.Callback {
 
-        private final ArrayList<Camera1.Callback> mCallbacks = new ArrayList<>();
+        private final ArrayList<CameraImpl.Callback> mCallbacks = new ArrayList<>();
 
         private boolean mRequestLayoutOnOpen;
 
         CallbackBridge() {
         }
 
-        public void add(Camera1.Callback callback) {
+        public void add(CameraImpl.Callback callback) {
             mCallbacks.add(callback);
         }
 
-        public void remove(Camera1.Callback callback) {
+        public void remove(CameraImpl.Callback callback) {
             mCallbacks.remove(callback);
         }
 
         @Override
-        public void onCameraOpened(Camera1 camera) {
+        public void onCameraOpened(CameraImpl camera) {
             if (mRequestLayoutOnOpen) {
                 mRequestLayoutOnOpen = false;
                 requestLayout();
             }
-            for (Camera1.Callback callback : mCallbacks) {
+            for (CameraImpl.Callback callback : mCallbacks) {
                 callback.onCameraOpened(camera);
             }
         }
 
         @Override
-        public void onCameraClosed(Camera1 camera) {
-            for (Camera1.Callback callback : mCallbacks) {
+        public void onCameraClosed(CameraImpl camera) {
+            for (CameraImpl.Callback callback : mCallbacks) {
                 callback.onCameraClosed(camera);
             }
         }
 
         @Override
-        public void onPictureTaken(Camera1 camera, byte[] data) {
-            for (Camera1.Callback callback : mCallbacks) {
+        public void onPictureTaken(CameraImpl camera, byte[] data) {
+            for (CameraImpl.Callback callback : mCallbacks) {
                 callback.onPictureTaken(camera, data);
             }
         }
 
         @Override
-        public void onPicturePreview(Camera1 camera, byte[] data) {
-            for (Camera1.Callback callback : mCallbacks) {
+        public void onPicturePreview(CameraImpl camera, byte[] data) {
+            for (CameraImpl.Callback callback : mCallbacks) {
                 callback.onPicturePreview(camera, data);
             }
         }

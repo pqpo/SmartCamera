@@ -18,9 +18,7 @@ package com.google.android.cameraview;
 
 import android.annotation.SuppressLint;
 import android.graphics.ImageFormat;
-import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
-import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
@@ -39,7 +37,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class Camera1 {
+public class CameraImpl {
 
     private static final int INVALID_CAMERA_ID = -1;
 
@@ -57,7 +55,7 @@ public class Camera1 {
 
     private final AtomicBoolean isPictureCaptureInProgress = new AtomicBoolean(false);
 
-    Camera mCamera;
+    private Camera mCamera;
 
     private Camera.Parameters mCameraParameters;
 
@@ -87,7 +85,7 @@ public class Camera1 {
 
     private TextureViewPreview mPreview;
 
-    Camera1(Callback callback, TextureViewPreview preview) {
+    CameraImpl(Callback callback, TextureViewPreview preview) {
         mCallback = callback;
         mPreview = preview;
         preview.setCallback(new TextureViewPreview.Callback() {
@@ -105,7 +103,7 @@ public class Camera1 {
         return mPreview.getView();
     }
 
-    void startPreview() {
+    private void startPreview() {
         if(mCameraParameters == null || mCamera == null) {
             return;
         }
@@ -120,7 +118,7 @@ public class Camera1 {
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
                 if (previewBuffer != null && mCallback != null) {
-                    mCallback.onPicturePreview(Camera1.this, previewBuffer);
+                    mCallback.onPicturePreview(CameraImpl.this, previewBuffer);
                     if (mCamera != null) {
                         mCamera.addCallbackBuffer(previewBuffer);
                     }
@@ -191,10 +189,10 @@ public class Camera1 {
 
     // Suppresses Camera#setPreviewTexture
     @SuppressLint("NewApi")
-    void setUpPreview() {
+    private void setUpPreview() {
         try {
             if (mPreview.getOutputClass() == SurfaceHolder.class) {
-                final boolean needsToStopPreview = mShowingPreview && Build.VERSION.SDK_INT < 14;
+                final boolean needsToStopPreview = mShowingPreview;
                 if (needsToStopPreview) {
                     mCamera.stopPreview();
                 }
@@ -203,7 +201,7 @@ public class Camera1 {
                     startPreview();
                 }
             } else {
-                mCamera.setPreviewTexture((SurfaceTexture) mPreview.getSurfaceTexture());
+                mCamera.setPreviewTexture(mPreview.getSurfaceTexture());
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -309,13 +307,13 @@ public class Camera1 {
         }
     }
 
-    void takePictureInternal() {
+    private void takePictureInternal() {
         if (!isPictureCaptureInProgress.getAndSet(true)) {
             mCamera.takePicture(null, null, null, new Camera.PictureCallback() {
 
                 public void onPictureTaken(byte[] data, Camera camera) {
                     isPictureCaptureInProgress.set(false);
-                    mCallback.onPictureTaken(Camera1.this, data);
+                    mCallback.onPictureTaken(CameraImpl.this, data);
                     camera.cancelAutoFocus();
                     startPreview();
                 }
@@ -331,7 +329,7 @@ public class Camera1 {
         if (isCameraOpened()) {
             mCameraParameters.setRotation(calcCameraRotation(displayOrientation));
             mCamera.setParameters(mCameraParameters);
-            final boolean needsToStopPreview = mShowingPreview && Build.VERSION.SDK_INT < 14;
+            final boolean needsToStopPreview = mShowingPreview;
             if (needsToStopPreview) {
                 mCamera.stopPreview();
             }
@@ -392,7 +390,7 @@ public class Camera1 {
         return r;
     }
 
-    void adjustCameraParameters() {
+   private void adjustCameraParameters() {
         SortedSet<Size> sizes = mPreviewSizes.sizes(mAspectRatio);
         if (sizes == null) { // Not supported
             mAspectRatio = chooseAspectRatio();
@@ -551,13 +549,13 @@ public class Camera1 {
 
     public abstract static class Callback {
 
-       public void onCameraOpened(Camera1 camera){}
+       public void onCameraOpened(CameraImpl camera){}
 
-       public void onCameraClosed(Camera1 camera){}
+       public void onCameraClosed(CameraImpl camera){}
 
-       public void onPictureTaken(Camera1 camera, byte[] data){}
+       public void onPictureTaken(CameraImpl camera, byte[] data){}
 
-       public void onPicturePreview(Camera1 camera, byte[] data){}
+       public void onPicturePreview(CameraImpl camera, byte[] data){}
 
     }
 

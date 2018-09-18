@@ -116,6 +116,9 @@ public class SmartScanner {
     }
 
     private Bitmap preparePreviewBitmap(int bitmapW, int bitmapH) {
+        if (bitmapH == 0 || bitmapW == 0) {
+            return null;
+        }
         if (mPreviewBitmap != null
                 && (mPreviewBitmap.getWidth() != bitmapW || mPreviewBitmap.getHeight() != bitmapH)) {
             mPreviewBitmap = null;

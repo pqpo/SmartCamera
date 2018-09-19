@@ -103,6 +103,10 @@ public class CameraImpl {
         return mPreview.getView();
     }
 
+    public Camera.Parameters getParameters() {
+        return mCameraParameters;
+    }
+
     private void startPreview() {
         if(mCameraParameters == null || mCamera == null) {
             return;

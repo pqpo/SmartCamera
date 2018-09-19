@@ -137,6 +137,15 @@ public class MainActivity extends AppCompatActivity {
                 if (previewBitmap != null) {
                     ivPreview.setImageBitmap(previewBitmap);
                 }
+//                if (result == 1) {
+//                    Size pictureSize = smartCameraView.getPreviewSize();
+//                    int rotation = smartCameraView.getPreviewRotation();
+//                    Rect maskRect = mCameraView.getAdjustPreviewMaskRect();
+//                    Bitmap bitmap = mCameraView.cropYuvImage(yuvData, pictureSize.getWidth(), pictureSize.getHeight(), maskRect, rotation);
+//                    if (bitmap != null) {
+//                        showPicture(bitmap);
+//                    }
+//                }
                 return false;
             }
         });
@@ -151,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPictureTaken(CameraImpl camera, byte[] data) {
                 super.onPictureTaken(camera, data);
-                mCameraView.cropImage(data, new SmartCameraView.CropCallback() {
+                mCameraView.cropJpegImage(data, new SmartCameraView.CropCallback() {
                     @Override
                     public void onCropped(Bitmap cropBitmap) {
                         if (cropBitmap != null) {

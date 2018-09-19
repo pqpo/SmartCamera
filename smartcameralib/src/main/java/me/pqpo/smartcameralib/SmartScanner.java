@@ -138,6 +138,8 @@ public class SmartScanner {
 
     public static native void reloadParams();
 
+    public static native void crop(byte[] yuvData, int width, int height, int rotation, int x, int y, int maskWidth, int maskHeight, Bitmap resultBitmap);
+
     static {
         System.loadLibrary("smart_camera");
     }

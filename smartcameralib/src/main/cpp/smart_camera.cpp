@@ -33,11 +33,7 @@ static struct {
     float angleThreshold = 5;
 } gScannerParams;
 
-void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation, int maskX, int maskY, int maskWidth, int maskHeight, float scaleRatio) {
-    Mat mYuv(height+height/2, width, CV_8UC1, (uchar *)yuvData);
-    Mat imgMat(height, width, CV_8UC1);
-    cvtColor(mYuv, imgMat, CV_YUV420sp2GRAY);
-
+Mat cropByMask(Mat &imgMat, int rotation, int maskX, int maskY, int maskWidth, int maskHeight) {
     if (rotation == 90) {
         matRotateClockWise90(imgMat);
     } else if (rotation == 180) {
@@ -54,6 +50,15 @@ void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation,
 
     Rect rect(maskX, maskY, maskWidth, maskHeight);
     Mat croppedMat = imgMat(rect);
+    return croppedMat;
+}
+
+void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation, int maskX, int maskY, int maskWidth, int maskHeight, float scaleRatio) {
+    Mat mYuv(height+height/2, width, CV_8UC1, (uchar *)yuvData);
+    Mat imgMat(height, width, CV_8UC1);
+    cvtColor(mYuv, imgMat, CV_YUV420sp2GRAY);
+
+    Mat croppedMat = cropByMask(imgMat, rotation, maskX, maskY, maskWidth, maskHeight);
 
     Mat resizeMat;
     resize(croppedMat, resizeMat, Size(static_cast<int>(maskWidth * scaleRatio),
@@ -188,6 +193,21 @@ Java_me_pqpo_smartcameralib_SmartScanner_previewScan(JNIEnv *env, jclass type, j
         return 1;
     }
     return 0;
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_me_pqpo_smartcameralib_SmartScanner_crop(JNIEnv *env, jclass type, jbyteArray yuvData_,
+                                              jint width, jint height, jint rotation, jint maskX,
+                                              jint maskY, jint maskWidth, jint maskHeight,
+                                              jobject resultBitmap) {
+    jbyte *yuvData = env->GetByteArrayElements(yuvData_, NULL);
+    Mat mYuv(height+height/2, width, CV_8UC1, (uchar *)yuvData);
+    Mat imgMat(height, width, CV_8UC4);
+    cvtColor(mYuv, imgMat, CV_YUV420sp2RGBA);
+    Mat croppedMat = cropByMask(imgMat, rotation, maskX, maskY, maskWidth, maskHeight);
+    mat_to_bitmap(env, croppedMat, resultBitmap);
+    env->ReleaseByteArrayElements(yuvData_, yuvData, 0);
 }
 
 static void initScannerParams(JNIEnv *env) {

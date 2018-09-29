@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.android.cameraview;
+package com.google.android.cameraview.base;
 
 import android.content.Context;
 import android.util.SparseIntArray;
@@ -26,7 +26,7 @@ import android.view.Surface;
 /**
  * Monitors the value returned from {@link Display#getRotation()}.
  */
-abstract class DisplayOrientationDetector {
+public abstract class DisplayOrientationDetector {
 
     private final OrientationEventListener mOrientationEventListener;
 

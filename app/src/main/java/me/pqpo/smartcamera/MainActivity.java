@@ -14,7 +14,7 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.google.android.cameraview.CameraView;
+import com.google.android.cameraview.CameraImpl;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import io.reactivex.Observer;
@@ -132,21 +132,35 @@ public class MainActivity extends AppCompatActivity {
         mCameraView.getSmartScanner().setPreview(true);
         mCameraView.setOnScanResultListener(new SmartCameraView.OnScanResultListener() {
             @Override
-            public boolean onScanResult(SmartCameraView smartCameraView, int result) {
+            public boolean onScanResult(SmartCameraView smartCameraView, int result, byte[] yuvData) {
                 Bitmap previewBitmap = smartCameraView.getPreviewBitmap();
                 if (previewBitmap != null) {
                     ivPreview.setImageBitmap(previewBitmap);
                 }
+//                if (result == 1) {
+//                    Size pictureSize = smartCameraView.getPreviewSize();
+//                    int rotation = smartCameraView.getPreviewRotation();
+//                    Rect maskRect = mCameraView.getAdjustPreviewMaskRect();
+//                    Bitmap bitmap = mCameraView.cropYuvImage(yuvData, pictureSize.getWidth(), pictureSize.getHeight(), maskRect, rotation);
+//                    if (bitmap != null) {
+//                        showPicture(bitmap);
+//                    }
+//                }
                 return false;
             }
         });
 
-        mCameraView.addCallback(new CameraView.Callback() {
+        mCameraView.addCallback(new CameraImpl.Callback() {
 
             @Override
-            public void onPictureTaken(CameraView cameraView, byte[] data) {
-                super.onPictureTaken(cameraView, data);
-                mCameraView.cropImage(data, new SmartCameraView.CropCallback() {
+            public void onCameraOpened(CameraImpl camera) {
+                super.onCameraOpened(camera);
+            }
+
+            @Override
+            public void onPictureTaken(CameraImpl camera, byte[] data) {
+                super.onPictureTaken(camera, data);
+                mCameraView.cropJpegImage(data, new SmartCameraView.CropCallback() {
                     @Override
                     public void onCropped(Bitmap cropBitmap) {
                         if (cropBitmap != null) {

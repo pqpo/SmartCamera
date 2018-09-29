@@ -3,6 +3,7 @@ package me.pqpo.smartcameralib;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Handler;
@@ -11,8 +12,11 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 
+import com.google.android.cameraview.CameraImpl;
 import com.google.android.cameraview.CameraView;
-import com.google.android.cameraview.Size;
+import com.google.android.cameraview.base.Size;
+
+import me.pqpo.smartcameralib.utils.BitmapUtil;
 
 /**
  * Created by pqpo on 2018/8/15.
@@ -46,10 +50,10 @@ public class SmartCameraView extends CameraView {
         smartScanner = new SmartScanner();
         uiHandler = new ScanResultHandler(this);
 
-        addCallback(new Callback() {
+        addCallback(new CameraImpl.Callback() {
             @Override
-            public void onPicturePreview(CameraView cameraView, byte[] data) {
-                super.onPicturePreview(cameraView, data);
+            public void onPicturePreview(CameraImpl camera, byte[] data) {
+                super.onPicturePreview(camera, data);
                 if (data == null || !scanning) {
                     return;
                 }
@@ -58,7 +62,7 @@ public class SmartCameraView extends CameraView {
                 Rect revisedMaskRect = getAdjustPreviewMaskRect();
                 if (revisedMaskRect != null && size != null) {
                     int result = smartScanner.previewScan(data, size.getWidth(), size.getHeight(), previewRotation, revisedMaskRect);
-                    uiHandler.sendEmptyMessage(result);
+                    uiHandler.obtainMessage(result, data).sendToTarget();
                 }
             }
         });
@@ -141,15 +145,28 @@ public class SmartCameraView extends CameraView {
         return maskView.getMaskRect();
     }
 
-    public void cropImage(final byte[] data, final CropCallback cropCallback) {
+    public Bitmap cropYuvImage(final byte[] data, int width, int height, Rect maskRect, int rotation) {
+        Bitmap bitmap = Bitmap.createBitmap(maskRect.width(), maskRect.height(), Bitmap.Config.ARGB_8888);
+        SmartScanner.crop(data, width, height, rotation, maskRect.left, maskRect.top, maskRect.width(), maskRect.height(), bitmap);
+        return bitmap;
+    }
+
+    public void cropJpegImage(final byte[] data, final CropCallback cropCallback) {
         new Thread() {
             @Override
             public void run() {
                 super.run();
-                Rect revisedMaskRect = getAdjustPictureMaskRect();
                 Bitmap bitmapSrc = BitmapFactory.decodeByteArray(data, 0, data.length);
+                int rotation = BitmapUtil.getOrientation(data);
+                if (rotation != 0) {
+                    Matrix m = new Matrix();
+                    m.setRotate(rotation);
+                    bitmapSrc = Bitmap.createBitmap(bitmapSrc, 0, 0, bitmapSrc.getWidth(), bitmapSrc.getHeight(), m, true);
+                }
+                Rect revisedMaskRect = getAdjustPictureMaskRect();
                 if (revisedMaskRect != null) {
-                    final Bitmap bitmap = Bitmap.createBitmap(bitmapSrc, revisedMaskRect.left, revisedMaskRect.top, revisedMaskRect.width(), revisedMaskRect.height());
+                    final Bitmap bitmap = Bitmap.createBitmap(bitmapSrc, revisedMaskRect.left, revisedMaskRect.top,
+                            revisedMaskRect.width(), revisedMaskRect.height());
                     bitmapSrc.recycle();
                     post(new Runnable() {
                         @Override
@@ -174,7 +191,7 @@ public class SmartCameraView extends CameraView {
     }
 
     public interface OnScanResultListener {
-        boolean onScanResult(SmartCameraView smartCameraView, int result);
+        boolean onScanResult(SmartCameraView smartCameraView, int result, byte[] yuvData);
     }
 
     private static class ScanResultHandler extends Handler {
@@ -192,8 +209,9 @@ public class SmartCameraView extends CameraView {
                 return;
             }
             int result = msg.what;
+            byte[] data = (byte[]) msg.obj;
             if (smartCameraView.onScanResultListener == null
-                    || !smartCameraView.onScanResultListener.onScanResult(smartCameraView, result)) {
+                    || !smartCameraView.onScanResultListener.onScanResult(smartCameraView, result, data)) {
                 if (result == 1) {
                     smartCameraView.takePicture();
                     smartCameraView.stopScan();

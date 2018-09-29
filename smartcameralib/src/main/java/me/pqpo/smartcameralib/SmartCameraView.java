@@ -3,6 +3,7 @@ package me.pqpo.smartcameralib;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Handler;
@@ -14,6 +15,8 @@ import android.util.AttributeSet;
 import com.google.android.cameraview.CameraImpl;
 import com.google.android.cameraview.CameraView;
 import com.google.android.cameraview.base.Size;
+
+import me.pqpo.smartcameralib.utils.BitmapUtil;
 
 /**
  * Created by pqpo on 2018/8/15.
@@ -153,10 +156,17 @@ public class SmartCameraView extends CameraView {
             @Override
             public void run() {
                 super.run();
-                Rect revisedMaskRect = getAdjustPictureMaskRect();
                 Bitmap bitmapSrc = BitmapFactory.decodeByteArray(data, 0, data.length);
+                int rotation = BitmapUtil.getOrientation(data);
+                if (rotation != 0) {
+                    Matrix m = new Matrix();
+                    m.setRotate(rotation);
+                    bitmapSrc = Bitmap.createBitmap(bitmapSrc, 0, 0, bitmapSrc.getWidth(), bitmapSrc.getHeight(), m, true);
+                }
+                Rect revisedMaskRect = getAdjustPictureMaskRect();
                 if (revisedMaskRect != null) {
-                    final Bitmap bitmap = Bitmap.createBitmap(bitmapSrc, revisedMaskRect.left, revisedMaskRect.top, revisedMaskRect.width(), revisedMaskRect.height());
+                    final Bitmap bitmap = Bitmap.createBitmap(bitmapSrc, revisedMaskRect.left, revisedMaskRect.top,
+                            revisedMaskRect.width(), revisedMaskRect.height());
                     bitmapSrc.recycle();
                     post(new Runnable() {
                         @Override

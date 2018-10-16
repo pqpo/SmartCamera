@@ -60,6 +60,10 @@ void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation,
 
     Mat croppedMat = cropByMask(imgMat, rotation, maskX, maskY, maskWidth, maskHeight);
 
+    if (croppedMat.cols == 0) {
+        return;
+    }
+
     Mat resizeMat;
     resize(croppedMat, resizeMat, Size(static_cast<int>(maskWidth * scaleRatio),
                                        static_cast<int>(maskHeight * scaleRatio)));
@@ -133,6 +137,10 @@ Java_me_pqpo_smartcameralib_SmartScanner_previewScan(JNIEnv *env, jclass type, j
     Mat outMat;
     processMat(yuvData, outMat, width, height, rotation, x, y, maskWidth, maskHeight, ratio);
     env->ReleaseByteArrayElements(yuvData_, yuvData, 0);
+
+    if (outMat.cols == 0) {
+        return 0;
+    }
 
     int matH = outMat.rows;
     int matW = outMat.cols;

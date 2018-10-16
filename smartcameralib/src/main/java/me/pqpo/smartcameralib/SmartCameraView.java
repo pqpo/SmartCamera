@@ -54,7 +54,7 @@ public class SmartCameraView extends CameraView {
             @Override
             public void onPicturePreview(CameraImpl camera, byte[] data) {
                 super.onPicturePreview(camera, data);
-                if (data == null || !scanning) {
+                if (data == null || data.length == 0 || !scanning) {
                     return;
                 }
                 int previewRotation = getPreviewRotation();

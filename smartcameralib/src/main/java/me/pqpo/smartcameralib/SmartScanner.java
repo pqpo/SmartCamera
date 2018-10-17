@@ -2,6 +2,7 @@ package me.pqpo.smartcameralib;
 
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.support.annotation.NonNull;
 
 /**
  * Created by pqpo on 2018/8/16.
@@ -105,14 +106,19 @@ public class SmartScanner {
         return mPreviewBitmap;
     }
 
-    public int previewScan(byte[] yuvData, int width, int height, int rotation, Rect maskRect) {
-        float scaleRatio = calculateScaleRatio(maskRect.width(), maskRect.height());
+    public int previewScan(@NonNull byte[] yuvData, int width, int height, int rotation, @NonNull Rect maskRect) {
+        int maskW = maskRect.width();
+        int maskH = maskRect.height();
+        if (yuvData.length == 0 || maskH <= 0 || maskW <= 0) {
+            return 0;
+        }
+        float scaleRatio = calculateScaleRatio(maskW, maskH);
         Bitmap previewBitmap = null;
         if (preview) {
-            previewBitmap = preparePreviewBitmap((int)(scaleRatio * maskRect.width()),
-                    (int)(scaleRatio * maskRect.height()));
+            previewBitmap = preparePreviewBitmap((int)(scaleRatio * maskW),
+                    (int)(scaleRatio * maskH));
         }
-        return previewScan(yuvData, width, height, rotation, maskRect.left, maskRect.top, maskRect.width(), maskRect.height(), previewBitmap, scaleRatio);
+        return previewScan(yuvData, width, height, rotation, maskRect.left, maskRect.top, maskW, maskH, previewBitmap, scaleRatio);
     }
 
     private Bitmap preparePreviewBitmap(int bitmapW, int bitmapH) {

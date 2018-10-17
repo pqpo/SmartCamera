@@ -49,7 +49,7 @@ allprojects {
 
 ```groovy
 dependencies {
-      implementation 'com.github.pqpo:SmartCamera:v1.3.1'
+      implementation 'com.github.pqpo:SmartCamera:v1.3.2'
 }
 ```
 

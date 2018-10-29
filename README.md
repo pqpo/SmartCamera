@@ -6,7 +6,7 @@
 
 语言描述起来略显生涩，具体实现的功能如下图所示，适用于身份证，名片，文档等内容的扫描、自动拍摄并且裁剪。   
 
-你也可以下载 apk 体验： [SmartCamera-Sample-debug.apk](art/SmartCamera-Sample-debug.apk)
+你可以下载体验集成了 SmartCamera 的 [卡片备忘录.apk](https://www.coolapk.com/apk/me.pqpo.cardmanger)， 也可以下载 demo apk： [SmartCamera-Sample-debug.apk](art/SmartCamera-Sample-debug.apk)，也
 
 ![](art/smartcamera_demo.gif)
 

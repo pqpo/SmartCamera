@@ -23,7 +23,7 @@ android {
 dependencies {
     implementation 'com.github.tbruyelle:rxpermissions:0.10.2'
     implementation project(':smartcameralib')
-//    implementation 'com.github.pqpo:SmartCamera:v1.3.2'
+//    implementation 'com.github.pqpo:SmartCamera:v2.0.1'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "com.android.support:appcompat-v7:$supportLibraryVersion"
 }

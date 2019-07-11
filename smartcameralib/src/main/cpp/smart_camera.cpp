@@ -8,8 +8,11 @@
 #include <android/log.h>
 #include <sstream>
 #include <opencv_utils.h>
+#include "opencv2/core/core_c.h"
 
 using namespace cv;
+using namespace std;
+
 
 static const char* const kClassScanner = "me/pqpo/smartcameralib/SmartScanner";
 
@@ -56,7 +59,7 @@ Mat cropByMask(Mat &imgMat, int rotation, int maskX, int maskY, int maskWidth, i
 void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation, int maskX, int maskY, int maskWidth, int maskHeight, float scaleRatio) {
     Mat mYuv(height+height/2, width, CV_8UC1, (uchar *)yuvData);
     Mat imgMat(height, width, CV_8UC1);
-    cvtColor(mYuv, imgMat, CV_YUV420sp2GRAY);
+    cvtColor(mYuv, imgMat, COLOR_YUV420sp2GRAY);
 
     Mat croppedMat = cropByMask(imgMat, rotation, maskX, maskY, maskWidth, maskHeight);
 
@@ -76,7 +79,7 @@ void processMat(void* yuvData, Mat& outMat, int width, int height, int rotation,
     Mat dilateMat;
     dilate(cannyMat, dilateMat, getStructuringElement(MORPH_RECT, Size(2, 2)));
     Mat thresholdMat;
-    threshold(dilateMat, thresholdMat, gScannerParams.thresholdThresh, gScannerParams.thresholdMaxVal, CV_THRESH_OTSU);
+    threshold(dilateMat, thresholdMat, gScannerParams.thresholdThresh, gScannerParams.thresholdMaxVal, THRESH_OTSU);
     outMat = thresholdMat;
 }
 
@@ -105,7 +108,7 @@ bool checkLines(vector<Vec4i> &lines, int checkMinLength, bool vertical) {
             return true;
         }
 
-        float angle = cvFastArctan(fast_abs(y2 - y1), fast_abs(x2 - x1));
+        float angle = cvFastArctan(abs(y2 - y1), abs(x2 - x1));
         if (DEBUG) {
             std::ostringstream logStr;
             logStr << "Detection angle: [ vertical = " << vertical
@@ -114,12 +117,12 @@ bool checkLines(vector<Vec4i> &lines, int checkMinLength, bool vertical) {
             LOG_D("%s", log.c_str());
         }
         if (vertical) {
-            if(fast_abs(90 - angle) < gScannerParams.angleThreshold) {
+            if(abs(90 - angle) < gScannerParams.angleThreshold) {
                 return true;
             }
         }
         if (!vertical) {
-            if(fast_abs(angle) < gScannerParams.angleThreshold) {
+            if(abs(angle) < gScannerParams.angleThreshold) {
                 return true;
             }
         }
@@ -212,7 +215,7 @@ Java_me_pqpo_smartcameralib_SmartScanner_crop(JNIEnv *env, jclass type, jbyteArr
     jbyte *yuvData = env->GetByteArrayElements(yuvData_, NULL);
     Mat mYuv(height+height/2, width, CV_8UC1, (uchar *)yuvData);
     Mat imgMat(height, width, CV_8UC4);
-    cvtColor(mYuv, imgMat, CV_YUV420sp2RGBA);
+    cvtColor(mYuv, imgMat, COLOR_YUV420sp2RGBA);
     Mat croppedMat = cropByMask(imgMat, rotation, maskX, maskY, maskWidth, maskHeight);
     mat_to_bitmap(env, croppedMat, resultBitmap);
     env->ReleaseByteArrayElements(yuvData_, yuvData, 0);

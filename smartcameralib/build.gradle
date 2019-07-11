@@ -8,15 +8,13 @@ android {
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 9
-        versionName "1.3.2"
+        versionCode 10
+        versionName "2.0.0"
 
         externalNativeBuild {
             cmake {
-                cppFlags "-std=c++11 -frtti -lz"
-                abiFilters 'armeabi-v7a', 'x86'
-                arguments '-DANDROID_STL=gnustl_shared'
-//                abiFilters 'armeabi', 'armeabi-v7a', 'mips', 'x86'
+                cppFlags "-std=c++11 -frtti"
+                abiFilters 'armeabi-v7a', "arm64-v8a", 'x86', 'x86_64'
             }
         }
     }
@@ -50,6 +48,5 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-
     implementation "com.android.support:appcompat-v7:$supportLibraryVersion"
 }

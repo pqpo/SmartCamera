@@ -7,6 +7,7 @@
 
 #include <opencv2/opencv.hpp>
 using namespace cv;
+using namespace std;
 
 void drawLines(Mat &src, vector<Vec4i> &lines, int offsetX, int offsetY);
 void matRotateClockWise90(Mat &src);

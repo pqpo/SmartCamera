@@ -5,6 +5,7 @@
 #include <opencv_utils.h>
 
 using namespace cv;
+using namespace std;
 
 void drawLines(Mat &src, vector<Vec2f> &lines) {
     // 以下遍历图像绘制每一条线
@@ -41,13 +42,13 @@ void drawLines(Mat &src, vector<Vec2f> &lines) {
 void drawLines(Mat &src, vector<Vec4i> &lines, int offsetX, int offsetY) {
     for( size_t i = 0; i < lines.size(); i++ ) {
         Vec4i l = lines[i];
-        line(src, Point(l[0] + offsetX, l[1] + offsetY), Point(l[2] + offsetX, l[3] + offsetY), Scalar(255), 4, CV_AA);
+        line(src, Point(l[0] + offsetX, l[1] + offsetY), Point(l[2] + offsetX, l[3] + offsetY), Scalar(255), 4, LINE_AA);
     }
 }
 
 vector<Point> findMaxContours(Mat &src) {
     vector<vector<Point>> contours;
-    findContours(src, contours, CV_RETR_EXTERNAL, CHAIN_APPROX_NONE);
+    findContours(src, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
     vector<Point> maxAreaPoints;
     double maxArea = 0;
     vector<vector<Point>>::const_iterator it= contours.begin();
